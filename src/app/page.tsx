@@ -18,21 +18,9 @@ import { ProfileScreen } from '@/components/unira/ProfileScreen';
 import { ChatScreen } from '@/components/unira/ChatScreen';
 import { NotificationsScreen } from '@/components/unira/NotificationsScreen';
 import { AdminScreen } from '@/components/unira/AdminScreen';
+import { DriverScreen } from '@/components/unira/DriverScreen';
 
-// Placeholder screens for future development
-function PlaceholderScreen({ title, description, icon }: { title: string; description: string; icon: React.ReactNode }) {
-  return (
-    <div className="flex flex-col items-center justify-center min-h-[100dvh] px-6 pt-4 pb-24 bg-[#F5F7FA]">
-      <div className="text-center">
-        <div className="w-20 h-20 rounded-2xl bg-[#0EA5A0]/10 flex items-center justify-center mx-auto mb-4">
-          {icon}
-        </div>
-        <h2 className="text-xl font-bold text-gray-900 mb-2">{title}</h2>
-        <p className="text-gray-500 text-sm">{description}</p>
-      </div>
-    </div>
-  );
-}
+
 
 export default function HomePage() {
   const { currentScreen, user, isFirebaseReady, toastMessage, toastType, showToast } = useAppStore();
@@ -86,13 +74,7 @@ export default function HomePage() {
       case 'notifications':
         return <NotificationsScreen />;
       case 'driver':
-        return (
-          <PlaceholderScreen
-            title="Modo Conductor"
-            description="Próximamente: panel de conductor, solicitudes, navegación"
-            icon={<svg className="w-10 h-10 text-[#0EA5A0]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>}
-          />
-        );
+        return <DriverScreen />;
       case 'chat':
         return <ChatScreen />;
       case 'admin':
@@ -100,13 +82,7 @@ export default function HomePage() {
       case 'food-restaurant':
         return <FoodScreen />;
       default:
-        return (
-          <PlaceholderScreen
-            title="Pantalla no encontrada"
-            description={`La pantalla "${currentScreen}" aún no está disponible.`}
-            icon={<Info className="w-10 h-10 text-gray-400" />}
-          />
-        );
+        return null;
     }
   }, [currentScreen]);
 

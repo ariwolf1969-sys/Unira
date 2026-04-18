@@ -181,7 +181,7 @@ export function ProfileScreen() {
               <div className="w-10 h-10 rounded-xl bg-sky-50 flex items-center justify-center">
                 <Calendar className="w-5 h-5 text-sky-500" />
               </div>
-              <span className="text-lg font-bold text-gray-900">2024</span>
+              <span className="text-lg font-bold text-gray-900">2026</span>
               <span className="text-[10px] text-gray-500 font-medium">Miembro</span>
             </div>
           </div>

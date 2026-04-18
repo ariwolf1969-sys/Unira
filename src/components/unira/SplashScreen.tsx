@@ -5,7 +5,7 @@ import { useAppStore } from '@/lib/store';
 
 export function SplashScreen() {
   const [dotIndex, setDotIndex] = useState(0);
-  const { navigateTo, isFirebaseReady, user } = useAppStore();
+  const { navigateTo, user } = useAppStore();
 
   // 3-dot loading animation
   useEffect(() => {
@@ -20,14 +20,12 @@ export function SplashScreen() {
     const timer = setTimeout(() => {
       if (user) {
         navigateTo('home');
-      } else if (!isFirebaseReady && !localStorage.getItem('unira_firebase_config')) {
-        navigateTo('setup');
       } else {
         navigateTo('auth');
       }
     }, 2500);
     return () => clearTimeout(timer);
-  }, [user, isFirebaseReady, navigateTo]);
+  }, [user, navigateTo]);
 
   return (
     <div className="flex flex-col items-center justify-center min-h-[100dvh] bg-[#0A0F14] px-6">
