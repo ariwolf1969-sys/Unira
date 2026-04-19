@@ -421,7 +421,7 @@ export function DriverScreen() {
       {/* Active Trip Verification */}
       {activeTrip && !codeVerified && (
         <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-end justify-center">
-          <div className="w-full max-w-[430px] bg-[#F5F7FA] rounded-t-3xl p-6 pb-8">
+          <div className="w-full max-w-[430px] bg-[#F5F7FA] rounded-t-3xl p-6 pb-8 max-h-[85dvh] overflow-y-auto">
             <div className="flex justify-center mb-3">
               <div className="w-10 h-1 rounded-full bg-gray-300" />
             </div>
