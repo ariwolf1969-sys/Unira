@@ -59,9 +59,30 @@ export function DriverScreen() {
 
   const handleAcceptTrip = async (tripId: string) => {
     setAcceptingTrip(tripId);
-    await new Promise((r) => setTimeout(r, 1500));
+    const code = String(Math.floor(1000 + Math.random() * 9000));
+    await new Promise((r) => setTimeout(r, 1000));
     setAcceptingTrip(null);
-    showToast('¡Viaje aceptado! Navegando al punto de recogida...', 'success');
+    const trip = pendingRequests.find(t => t.id === tripId);
+    if (trip) {
+      setActiveTrip(trip);
+      setTripVerificationCode(code);
+    }
+    showToast('Viaje aceptado! Ingresa el codigo del pasajero', 'success');
+  };
+
+  const handleVerifyCode = () => {
+    if (codeInput.length === 4) {
+      setCodeVerified(true);
+      showToast('Codigo verificado! Viaje iniciado', 'success');
+    }
+  };
+
+  const handleCancelTrip = () => {
+    setActiveTrip(null);
+    setCodeInput('');
+    setCodeVerified(false);
+    setTripVerificationCode(null);
+    showToast('Viaje cancelado', 'info');
   };
 
   const handleRejectTrip = (tripId: string) => {
