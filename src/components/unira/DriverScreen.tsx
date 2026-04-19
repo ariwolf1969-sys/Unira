@@ -71,9 +71,14 @@ export function DriverScreen() {
   };
 
   const handleVerifyCode = () => {
-    if (codeInput.length === 4) {
+    if (codeInput.length === 4 && codeInput === tripVerificationCode) {
       setCodeVerified(true);
       showToast('Codigo verificado! Viaje iniciado', 'success');
+    } else if (codeInput.length === 4) {
+      showToast('Codigo incorrecto, intenta de nuevo', 'error');
+      setCodeInput('');
+      const inp = document.querySelectorAll('.drv-code');
+      if (inp[0]) inp[0].focus();
     }
   };
 
