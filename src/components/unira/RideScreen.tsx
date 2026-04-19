@@ -4,6 +4,8 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { useAppStore, type Place, type Trip } from '@/lib/store';
 import { vehicleTypes, places } from '@/lib/places';
 import { formatCurrency, haversineDistance, calculateFare, generateId } from '@/lib/utils';
+import MapView from './MapView';
+import MapView from './MapView';
 import {
   ArrowLeft,
   MapPin,
@@ -465,7 +467,7 @@ export function RideScreen() {
           </div>
 
           {/* Input Card (Bottom Sheet Style) */}
-          <div className="mx-4 mt-2 bg-white rounded-3xl shadow-lg overflow-hidden sheet-slide-up">
+          <div className="mx-4 mt-2 bg-white rounded-3xl shadow-lg sheet-slide-up">
             {/* Grab handle */}
             <div className="flex justify-center pt-3 pb-1">
               <div className="w-10 h-1 rounded-full bg-gray-300" />
@@ -674,18 +676,10 @@ export function RideScreen() {
             </div>
           )}
 
-          {/* Map placeholder area */}
+          {/* Map */}
           <div className="mx-4 mt-4 rounded-2xl overflow-hidden relative" style={{ height: 'calc(100dvh - 420px)', minHeight: '200px', maxHeight: '300px' }}>
-            <div className="w-full h-full bg-gradient-to-br from-[#0EA5A0]/20 via-[#0EA5A0]/10 to-[#0C8CE9]/10 flex items-center justify-center">
-              <div className="text-center">
-                <div className="w-16 h-16 rounded-full bg-[#0EA5A0]/20 flex items-center justify-center mx-auto mb-2">
-                  <MapPin className="w-8 h-8 text-[#0EA5A0]" />
-                </div>
-                <p className="text-xs text-gray-500">Mapa de Buenos Aires</p>
-              </div>
-            </div>
-          </div>
-        </div>
+            <MapView origin={localOrigin} destination={localDest} />
+          </div>        </div>
       )}
 
       {/* ─── Step 2: Searching ─────────────────────────────────────── */}
