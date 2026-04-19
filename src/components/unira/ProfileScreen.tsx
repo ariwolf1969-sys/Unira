@@ -113,7 +113,7 @@ export function ProfileScreen() {
 
   // Handle change role
   const handleChangeRole = useCallback(() => {
-    store.navigateTo('role');
+    store.setCurrentScreen('role');
   }, [store]);
 
   return (

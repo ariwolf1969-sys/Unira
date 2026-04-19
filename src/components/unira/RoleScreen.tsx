@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useAppStore } from '@/lib/store';
 import { Button } from '@/components/ui/button';
-import { User, IdCard, ArrowRight, Zap } from 'lucide-react';
+import { User, IdCard, MapPin, Car, ArrowRight, Zap } from 'lucide-react';
 
 export function RoleScreen() {
   const [selected, setSelected] = useState<'passenger' | 'driver' | null>(null);
@@ -22,13 +22,13 @@ export function RoleScreen() {
   };
 
   const passengerFeatures = [
-    { icon: '📍', text: 'Pedí viajes en minutos' },
+    { icon: MapPin, text: 'Pedí viajes en minutos' },
     { icon: '🛵', text: 'Delivery y envíos' },
     { icon: '💳', text: 'Billetera digital' },
   ];
 
   const driverFeatures = [
-    { icon: '🚗', text: 'Aceptá viajes cercanos' },
+    { icon: Car, text: 'Aceptá viajes cercanos' },
     { icon: '📍', text: 'Navegación en tiempo real' },
     { icon: '💰', text: 'Ganancias semanales' },
   ];
