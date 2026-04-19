@@ -816,7 +816,6 @@ export function RideScreen() {
                 <p className="text-[10px] text-gray-400 mt-2">Mostra este codigo al conductor</p>
               </div>
             )}
-            </div>
 
             <p className="text-center text-xs text-gray-400 mt-4">El conductor llega a tu punto de partida...</p>
           </div>
