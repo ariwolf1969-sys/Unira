@@ -140,7 +140,6 @@
   min-height: 100dvh;
   position: relative;
   overflow-x: hidden;
-  overflow-y: auto;
   background: #F5F7FA;
 }
 
