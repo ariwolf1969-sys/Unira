@@ -807,7 +807,7 @@ export function RideScreen() {
               <div className="mt-4 pt-4 border-t border-gray-100 text-center">
                 <p className="text-xs text-gray-500 mb-2">Codigo de verificacion</p>
                 <div className="flex justify-center gap-2">
-                  {verificationCode.split(String()).map((d, i) => (
+                  {verificationCode.split('').map((d, i) => (
                     <div key={i} className="w-10 h-12 rounded-xl bg-[#0EA5A0]/10 border-2 border-[#0EA5A0]/30 flex items-center justify-center">
                       <span className="text-xl font-bold text-[#0EA5A0]">{d}</span>
                     </div>
