@@ -458,15 +458,12 @@ export function DriverScreen() {
               </div>
             </div>
             <p className="text-sm font-semibold text-gray-700 mb-2 text-center">Ingresa el codigo de 4 digitos</p>
-            <div className="flex justify-center gap-2 mb-2 relative">
-              {codeError && (
-                <p className="absolute -top-6 left-0 right-0 text-center text-xs font-semibold text-red-500 animate-pulse">Codigo incorrecto</p>
-              )}
+            <div className="flex justify-center gap-2 mb-2">
               {[0,1,2,3].map((i) => (
                 <input key={i} type="text" inputMode="numeric" maxLength={1} value={codeInput[i] || ''} onChange={(e) => { const v = e.target.value.replace(/[^0-9]/g, ''); if (v) { const c = codeInput.split(''); c[i] = v[0]; const nc = c.join(''); setCodeInput(nc); const inp = document.querySelectorAll('.drv-code'); if (i < 3 && inp[i+1]) inp[i+1].focus(); } }} onKeyDown={(e) => { if (e.key === 'Backspace') { if (!codeInput[i] && i > 0) { setCodeInput(codeInput.slice(0, i)); const inp = document.querySelectorAll('.drv-code'); if (inp[i-1]) inp[i-1].focus(); } else { const c = codeInput.split(''); c[i] = ''; setCodeInput(c.join('')); } } }} className="drv-code w-12 h-12 rounded-xl text-center text-xl font-bold bg-white border-2 border-gray-200 outline-none focus:border-[#0EA5A0] transition-all" />
               ))}
             </div>
-            <p className="text-[10px] text-gray-400 text-center mb-5">Demo: el codigo es {<span className="text-red-500 font-semibold animate-pulse">Codigo incorrecto</span>) : (<span className="text-[#0EA5A0] font-semibold">{tripVerificationCode}</span>)}</p>
+            <p className="text-[10px] text-gray-400 text-center mb-5">{codeError ? (<span className="text-red-500 font-semibold">Codigo incorrecto</span>) : (<>Demo: <span className="text-[#0EA5A0] font-semibold">{tripVerificationCode || '----'}</span></>)}</p>
             <div className="flex gap-2">
               <button onClick={handleCancelTrip} className="flex-1 h-11 rounded-2xl border-2 border-gray-200 text-gray-600 font-semibold text-sm hover:bg-gray-50 active:scale-95 transition-all">Cancelar</button>
               <button onClick={handleVerifyCode} disabled={codeInput.length < 4} className="flex-1 h-12 rounded-2xl bg-[#0EA5A0] text-white font-semibold text-sm shadow-lg shadow-[#0EA5A0]/25 active:scale-95 transition-all disabled:opacity-50">Confirmar</button>
