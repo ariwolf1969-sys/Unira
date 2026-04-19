@@ -26,6 +26,8 @@ import {
   Clock,
   Route,
   CircleDot,
+  Users,
+  Share2,
 } from 'lucide-react';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -127,6 +129,8 @@ export function RideScreen() {
   const [tip, setTip] = useState(0);
   const [fareBreakdown, setFareBreakdown] = useState<FareBreakdown>({ base: 0, distance: 0, time: 0, tip: 0, total: 0 });
   const [isTransitioning, setIsTransitioning] = useState(false);
+  const [thirdName, setThirdName] = useState('');
+  const [thirdPhone, setThirdPhone] = useState('');
 
   const originTimerRef = useRef<NodeJS.Timeout | null>(null);
   const destTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -376,6 +380,7 @@ export function RideScreen() {
         driverPhoto: driver.photo,
         driverVehicle: `${driver.vehicle} - ${driver.color}`,
         rating: rating || undefined,
+        thirdParty: thirdName || undefined,
         distance: tripDistance,
         duration: tripDuration,
         createdAt: new Date(),
@@ -420,6 +425,8 @@ export function RideScreen() {
     setTripEta(0);
     setDriver(null);
     setVerificationCode('');
+    setThirdName('');
+    setThirdPhone('');
     store.setTripVerificationCode(null);
     store.setOrigin(null);
     store.setDestination(null);
@@ -636,6 +643,9 @@ export function RideScreen() {
                   </div>
                 </div>
 
+                <div className="px-0 pb-2"><input type="text" value={thirdName} onChange={e => setThirdName(e.target.value)} placeholder="Viaje para otra persona (opcional)" className="w-full h-10 rounded-xl bg-gray-50 border border-gray-200 px-3 text-sm outline-none focus:border-[#0EA5A0] placeholder:text-gray-400" /></div>
+                {thirdName && (<div className="px-0 pb-2"><input type="tel" value={thirdPhone} onChange={e => setThirdPhone(e.target.value)} placeholder="Telefono de quien viaja (opcional)" className="w-full h-10 rounded-xl bg-gray-50 border border-gray-200 px-3 text-sm outline-none focus:border-[#0EA5A0] placeholder:text-gray-400" /></div>)}
+
                 {/* Request button */}
                 <div className="px-4 pb-5">
                   <button
@@ -802,6 +812,7 @@ export function RideScreen() {
               </div>
             </div>
 
+            {thirdName && (<div className="bg-[#0EA5A0]/5 border border-[#0EA5A0]/20 rounded-2xl p-3 mb-3 flex items-center gap-2"><Users className="w-4 h-4 text-[#0EA5A0]" /><div><p className="text-xs text-gray-500">Viaje para</p><p className="text-sm font-semibold text-gray-900">{thirdName}</p></div><button onClick={() => {navigator.clipboard.writeText(verificationCode);store.showToast("Codigo copiado","success")}} className="ml-auto w-8 h-8 rounded-full bg-[#0EA5A0] flex items-center justify-center"><Share2 className="w-4 h-4 text-white" /></button></div>)}
             {/* Verification code */}
             {verificationCode && (
               <div className="mt-4 pt-4 border-t border-gray-100 text-center">
