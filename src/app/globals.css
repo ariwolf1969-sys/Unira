@@ -136,9 +136,11 @@
 .mobile-app {
   max-width: 430px;
   margin: 0 auto;
+  height: 100dvh;
   min-height: 100dvh;
   position: relative;
   overflow-x: hidden;
+  overflow-y: auto;
   background: #F5F7FA;
 }
 
