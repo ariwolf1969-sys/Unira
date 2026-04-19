@@ -421,14 +421,14 @@ export function DriverScreen() {
       {/* Active Trip Verification */}
       {activeTrip && !codeVerified && (
         <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-end justify-center">
-          <div className="w-full max-w-[430px] bg-[#F5F7FA] rounded-t-3xl p-6 pb-8 max-h-[85dvh] overflow-y-auto">
+          <div className="w-full max-w-[430px] bg-[#F5F7FA] rounded-t-3xl p-4 pb-6">
             <div className="flex justify-center mb-3">
-              <div className="w-10 h-1 rounded-full bg-gray-300" />
+              <div className="w-10 h-1 rounded-full bg-gray-300 mb-1" />
             </div>
-            <h2 className="text-lg font-bold text-gray-900 mb-1 text-center">Verificar codigo</h2>
-            <p className="text-xs text-gray-500 text-center mb-4">Pedi el codigo al pasajero</p>
-            <div className="bg-white rounded-2xl p-4 mb-4 shadow-sm">
-              <div className="flex items-center gap-2 mb-3">
+            <h2 className="text-base font-bold text-gray-900 mb-0.5 text-center">Verificar codigo</h2>
+            <p className="text-[11px] text-gray-500 text-center mb-3">Pedi el codigo al pasajero</p>
+            <div className="bg-white rounded-2xl p-3 mb-3 shadow-sm">
+              <div className="flex items-center gap-2 mb-2">
                 <div className="w-8 h-8 rounded-full bg-[#0EA5A0]/10 flex items-center justify-center">
                   <span className="text-xs font-bold text-[#0EA5A0]">{activeTrip.passenger[0]}</span>
                 </div>
@@ -450,15 +450,15 @@ export function DriverScreen() {
                 </div>
               </div>
             </div>
-            <p className="text-sm font-semibold text-gray-700 mb-3 text-center">Ingresa el codigo de 4 digitos</p>
-            <div className="flex justify-center gap-3 mb-3">
+            <p className="text-sm font-semibold text-gray-700 mb-2 text-center">Ingresa el codigo de 4 digitos</p>
+            <div className="flex justify-center gap-2 mb-2">
               {[0,1,2,3].map((i) => (
-                <input key={i} type="text" inputMode="numeric" maxLength={1} value={codeInput[i] || ''} onChange={(e) => { const v = e.target.value.replace(/[^0-9]/g, ''); if (v) { const c = codeInput.split(''); c[i] = v[0]; const nc = c.join(''); setCodeInput(nc); const inp = document.querySelectorAll('.drv-code'); if (i < 3 && inp[i+1]) inp[i+1].focus(); } }} onKeyDown={(e) => { if (e.key === 'Backspace') { if (!codeInput[i] && i > 0) { setCodeInput(codeInput.slice(0, i)); const inp = document.querySelectorAll('.drv-code'); if (inp[i-1]) inp[i-1].focus(); } else { const c = codeInput.split(''); c[i] = ''; setCodeInput(c.join('')); } } }} className="drv-code w-14 h-16 rounded-xl text-center text-2xl font-bold bg-white border-2 border-gray-200 outline-none focus:border-[#0EA5A0] transition-all" />
+                <input key={i} type="text" inputMode="numeric" maxLength={1} value={codeInput[i] || ''} onChange={(e) => { const v = e.target.value.replace(/[^0-9]/g, ''); if (v) { const c = codeInput.split(''); c[i] = v[0]; const nc = c.join(''); setCodeInput(nc); const inp = document.querySelectorAll('.drv-code'); if (i < 3 && inp[i+1]) inp[i+1].focus(); } }} onKeyDown={(e) => { if (e.key === 'Backspace') { if (!codeInput[i] && i > 0) { setCodeInput(codeInput.slice(0, i)); const inp = document.querySelectorAll('.drv-code'); if (inp[i-1]) inp[i-1].focus(); } else { const c = codeInput.split(''); c[i] = ''; setCodeInput(c.join('')); } } }} className="drv-code w-12 h-12 rounded-xl text-center text-xl font-bold bg-white border-2 border-gray-200 outline-none focus:border-[#0EA5A0] transition-all" />
               ))}
             </div>
             <p className="text-[10px] text-gray-400 text-center mb-5">Demo: el codigo es {tripVerificationCode || '----'}</p>
-            <div className="flex gap-3">
-              <button onClick={handleCancelTrip} className="flex-1 h-12 rounded-2xl border-2 border-gray-200 text-gray-600 font-semibold text-sm hover:bg-gray-50 active:scale-95 transition-all">Cancelar</button>
+            <div className="flex gap-2">
+              <button onClick={handleCancelTrip} className="flex-1 h-11 rounded-2xl border-2 border-gray-200 text-gray-600 font-semibold text-sm hover:bg-gray-50 active:scale-95 transition-all">Cancelar</button>
               <button onClick={handleVerifyCode} disabled={codeInput.length < 4} className="flex-1 h-12 rounded-2xl bg-[#0EA5A0] text-white font-semibold text-sm shadow-lg shadow-[#0EA5A0]/25 active:scale-95 transition-all disabled:opacity-50">Confirmar</button>
             </div>
           </div>
