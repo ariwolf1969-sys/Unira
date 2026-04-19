@@ -1,10 +1,17 @@
 'use client';
 
+const MapView = dynamic(() => import('./MapView'), { ssr: false });
 import { useState, useEffect, useRef, useCallback } from 'react';
+import dynamic from 'next/dynamic';
+const MapView = dynamic(() => import('./MapView'), { ssr: false });
+import dynamic from 'next/dynamic';
+const MapView = dynamic(() => import('./MapView'), { ssr: false });
 import { useAppStore, type Place, type Trip } from '@/lib/store';
+const MapView = dynamic(() => import('./MapView'), { ssr: false });
 import { vehicleTypes, places } from '@/lib/places';
+const MapView = dynamic(() => import('./MapView'), { ssr: false });
 import { formatCurrency, haversineDistance, calculateFare, generateId } from '@/lib/utils';
-import MapView from './MapView';
+const MapView = dynamic(() => import('./MapView'), { ssr: false });
 import {
   ArrowLeft,
   MapPin,
