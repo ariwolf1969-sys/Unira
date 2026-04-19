@@ -81,7 +81,7 @@ export function ProfileScreen() {
   const [formName, setFormName] = useState(store.user?.name || '');
   const [formPhone, setFormPhone] = useState(store.user?.phone || '');
   const [formEmail, setFormEmail] = useState(store.user?.email || '');
-  const [formDni, setFormDni] = useState(store.user?.dni || '');
+  const [formDni, setFormDni] = useState('');
 
   // Stats from trip history
   const completedTrips = useMemo(() => {
@@ -252,23 +252,34 @@ export function ProfileScreen() {
       </div>
     </div>
       {editing && (
-        <div className="fixed inset-0 z-[999] bg-black/50 backdrop-blur-sm flex items-center justify-center px-4">
-          <div className="w-full max-w-sm bg-[#F5F7FA] rounded-t-3xl p-5 pb-6 max-h-[80dvh] overflow-y-auto">
+        <div className="fixed inset-0 z-[999] bg-black/50 backdrop-blur-sm flex items-end justify-center">
+          <div className="w-full max-w-sm bg-[#F5F7FA] rounded-t-3xl p-5 pb-6">
             <div className="flex justify-center mb-2"><div className="w-10 h-1 rounded-full bg-gray-300" /></div>
             <h2 className="text-lg font-bold text-gray-900 mb-4 text-center">Datos personales</h2>
             <div className="space-y-3">
-              <div><label className="text-xs font-semibold text-gray-500 mb-1 block">Nombre completo</label><input type="text" value={formName} onChange={e => setFormName(e.target.value)} className="w-full h-11 rounded-xl bg-white border border-gray-200 px-3 text-sm outline-none focus:border-[#0EA5A0] transition-all" /></div>
-              <div><label className="text-xs font-semibold text-gray-500 mb-1 block">Telefono</label><input type="tel" value={formPhone} onChange={e => setFormPhone(e.target.value)} className="w-full h-11 rounded-xl bg-white border border-gray-200 px-3 text-sm outline-none focus:border-[#0EA5A0] transition-all" /></div>
-              <div><label className="text-xs font-semibold text-gray-500 mb-1 block">Email</label><input type="email" value={formEmail} onChange={e => setFormEmail(e.target.value)} className="w-full h-11 rounded-xl bg-white border border-gray-200 px-3 text-sm outline-none focus:border-[#0EA5A0] transition-all" /></div>
-              <div><label className="text-xs font-semibold text-gray-500 mb-1 block">DNI</label><input type="text" value={formDni} onChange={e => setFormDni(e.target.value)} placeholder="Opcional" className="w-full h-11 rounded-xl bg-white border border-gray-200 px-3 text-sm outline-none focus:border-[#0EA5A0] transition-all placeholder:text-gray-300" /></div>
+              <div>
+                <label className="text-xs font-semibold text-gray-500 mb-1 block">Nombre completo</label>
+                <input type="text" value={formName} onChange={e => setFormName(e.target.value)} className="w-full h-11 rounded-xl bg-white border border-gray-200 px-3 text-sm outline-none focus:border-[#0EA5A0]" />
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-gray-500 mb-1 block">Telefono</label>
+                <input type="tel" value={formPhone} onChange={e => setFormPhone(e.target.value)} className="w-full h-11 rounded-xl bg-white border border-gray-200 px-3 text-sm outline-none focus:border-[#0EA5A0]" />
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-gray-500 mb-1 block">Email</label>
+                <input type="email" value={formEmail} onChange={e => setFormEmail(e.target.value)} className="w-full h-11 rounded-xl bg-white border border-gray-200 px-3 text-sm outline-none focus:border-[#0EA5A0]" />
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-gray-500 mb-1 block">DNI</label>
+                <input type="text" value={formDni} onChange={e => setFormDni(e.target.value)} placeholder="Opcional" className="w-full h-11 rounded-xl bg-white border border-gray-200 px-3 text-sm outline-none focus:border-[#0EA5A0] placeholder:text-gray-300" />
+              </div>
             </div>
             <div className="flex gap-2 mt-5">
-              <button onClick={() => setEditing(false)} className="flex-1 h-11 rounded-2xl border-2 border-gray-200 text-gray-600 font-semibold text-sm hover:bg-gray-50 active:scale-95 transition-all">Cancelar</button>
-              <button onClick={() => { if (store.user && formName.trim()) { store.setUser({ ...store.user, name: formName.trim(), phone: formPhone.trim(), email: formEmail.trim(), dni: formDni.trim() }); setEditing(false); store.showToast('Datos actualizados', 'success'); } else { store.showToast('El nombre es obligatorio', 'error'); } }} className="flex-1 h-11 rounded-2xl bg-[#0EA5A0] text-white font-semibold text-sm shadow-lg shadow-[#0EA5A0]/25 active:scale-95 transition-all">Guardar</button>
+              <button onClick={() => setEditing(false)} className="flex-1 h-11 rounded-2xl border-2 border-gray-200 text-gray-600 font-semibold text-sm active:scale-95 transition-all">Cancelar</button>
+              <button onClick={() => { if(store.user && formName.trim()){store.setUser({...store.user, name: formName.trim(), phone: formPhone.trim(), email: formEmail.trim(), dni: formDni.trim()}); setEditing(false); store.showToast('Datos guardados','success');}else{store.showToast('Nombre obligatorio','error');} }} className="flex-1 h-11 rounded-2xl bg-[#0EA5A0] text-white font-semibold text-sm shadow-lg shadow-[#0EA5A0]/25 active:scale-95 transition-all">Guardar</button>
             </div>
           </div>
         </div>
       )}
-
   );
 }

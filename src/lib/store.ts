@@ -7,8 +7,8 @@ export interface User {
   email: string;
   name: string;
   phone: string;
-  avatar: string;
   dni: string;
+  avatar: string;
   role: 'passenger' | 'driver';
   isDriverApproved: boolean;
 }
