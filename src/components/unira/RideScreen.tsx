@@ -5,7 +5,6 @@ import { useAppStore, type Place, type Trip } from '@/lib/store';
 import { vehicleTypes, places } from '@/lib/places';
 import { formatCurrency, haversineDistance, calculateFare, generateId } from '@/lib/utils';
 import MapView from './MapView';
-import MapView from './MapView';
 import {
   ArrowLeft,
   MapPin,
