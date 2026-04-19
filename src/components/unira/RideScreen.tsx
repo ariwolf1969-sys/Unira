@@ -147,7 +147,8 @@ export function RideScreen() {
     try {
       const res = await fetch(
         `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&countrycodes=ar&limit=5`,
-        { headers: { 'Accept-Language': 'es' } }
+        { headers: { 'Accept-Language': 'es',
+              'User-Agent': 'UniraApp/1.0 (demo cooperativa)' } }
       );
       if (!res.ok) throw new Error('Nominatim error');
       const data = await res.json();
