@@ -18,7 +18,11 @@ export function RoleScreen() {
       selected === 'passenger' ? '¡Listo para viajar!' : 'Modo conductor activado',
       'success'
     );
-    navigateTo('home');
+    if (selected === 'driver') {
+      navigateTo('driver');
+    } else {
+      navigateTo('home');
+    }
   };
 
   const passengerFeatures = [

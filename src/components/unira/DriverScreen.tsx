@@ -48,8 +48,11 @@ const weeklyEarnings = [9500, 12000, 8800, 14200, 11000, 15500, 7500];
 // ─── Component ───────────────────────────────────────────────────────────────
 
 export function DriverScreen() {
-  const { user, setCurrentScreen, showToast, isOnline, setIsOnline } = useAppStore();
+  const { user, setCurrentScreen, showToast, isOnline, setIsOnline, tripVerificationCode, setTripVerificationCode } = useAppStore();
   const [acceptingTrip, setAcceptingTrip] = useState<string | null>(null);
+  const [activeTrip, setActiveTrip] = useState<typeof pendingRequests[0] | null>(null);
+  const [codeInput, setCodeInput] = useState('');
+  const [codeVerified, setCodeVerified] = useState(false);
   const [selectedTab, setSelectedTab] = useState<'overview' | 'trips' | 'earnings'>('overview');
 
   const userName = user?.name || 'Conductor';
@@ -77,7 +80,7 @@ export function DriverScreen() {
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
             <button
-              onClick={() => setCurrentScreen('home')}
+              onClick={() => setCurrentScreen('role')}
               className="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center hover:bg-gray-100 active:scale-95 transition-all"
               aria-label="Volver"
             >
@@ -394,6 +397,66 @@ export function DriverScreen() {
             </div>
           </motion.div>
         )}
+      {/* Active Trip Verification */}
+      {activeTrip && !codeVerified && (
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-end justify-center">
+          <div className="w-full max-w-[430px] bg-[#F5F7FA] rounded-t-3xl p-6 pb-8">
+            <div className="flex justify-center mb-3">
+              <div className="w-10 h-1 rounded-full bg-gray-300" />
+            </div>
+            <h2 className="text-lg font-bold text-gray-900 mb-1 text-center">Verificar codigo</h2>
+            <p className="text-xs text-gray-500 text-center mb-4">Pedi el codigo al pasajero</p>
+            <div className="bg-white rounded-2xl p-4 mb-4 shadow-sm">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-8 h-8 rounded-full bg-[#0EA5A0]/10 flex items-center justify-center">
+                  <span className="text-xs font-bold text-[#0EA5A0]">{activeTrip.passenger[0]}</span>
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm font-semibold text-gray-900">{activeTrip.passenger}</p>
+                  <p className="text-xs text-gray-500">{activeTrip.distance} . {activeTrip.eta}</p>
+                </div>
+                <span className="text-lg font-bold text-[#0EA5A0]">${activeTrip.fare}</span>
+              </div>
+              <div className="flex items-start gap-2">
+                <div className="flex flex-col items-center gap-1">
+                  <div className="w-2 h-2 rounded-full bg-[#0EA5A0]" />
+                  <div className="w-0.5 h-4 bg-gray-200" />
+                  <div className="w-2 h-2 rounded-full bg-[#F97316]" />
+                </div>
+                <div className="flex-1 space-y-2">
+                  <p className="text-xs text-gray-700">{activeTrip.from}</p>
+                  <p className="text-xs text-gray-700">{activeTrip.to}</p>
+                </div>
+              </div>
+            </div>
+            <p className="text-sm font-semibold text-gray-700 mb-3 text-center">Ingresa el codigo de 4 digitos</p>
+            <div className="flex justify-center gap-3 mb-3">
+              {[0,1,2,3].map((i) => (
+                <input key={i} type="text" inputMode="numeric" maxLength={1} value={codeInput[i] || ''} onChange={(e) => { const v = e.target.value.replace(/[^0-9]/g, ''); if (v) { const c = codeInput.split(''); c[i] = v[0]; const nc = c.join(''); setCodeInput(nc); const inp = document.querySelectorAll('.drv-code'); if (i < 3 && inp[i+1]) inp[i+1].focus(); } }} onKeyDown={(e) => { if (e.key === 'Backspace') { if (!codeInput[i] && i > 0) { setCodeInput(codeInput.slice(0, i)); const inp = document.querySelectorAll('.drv-code'); if (inp[i-1]) inp[i-1].focus(); } else { const c = codeInput.split(''); c[i] = ''; setCodeInput(c.join('')); } } }} className="drv-code w-14 h-16 rounded-xl text-center text-2xl font-bold bg-white border-2 border-gray-200 outline-none focus:border-[#0EA5A0] transition-all" />
+              ))}
+            </div>
+            <p className="text-[10px] text-gray-400 text-center mb-5">Demo: el codigo es {tripVerificationCode || '----'}</p>
+            <div className="flex gap-3">
+              <button onClick={handleCancelTrip} className="flex-1 h-12 rounded-2xl border-2 border-gray-200 text-gray-600 font-semibold text-sm hover:bg-gray-50 active:scale-95 transition-all">Cancelar</button>
+              <button onClick={handleVerifyCode} disabled={codeInput.length < 4} className="flex-1 h-12 rounded-2xl bg-[#0EA5A0] text-white font-semibold text-sm shadow-lg shadow-[#0EA5A0]/25 active:scale-95 transition-all disabled:opacity-50">Confirmar</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Trip Verified */}
+      {activeTrip && codeVerified && (
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center px-6">
+          <div className="w-full max-w-sm bg-white rounded-3xl p-6 text-center shadow-xl">
+            <div className="w-16 h-16 rounded-full bg-emerald-100 flex items-center justify-center mx-auto mb-4">
+              <CheckCircle className="w-8 h-8 text-emerald-600" />
+            </div>
+            <h2 className="text-xl font-bold text-gray-900 mb-1">Viaje iniciado!</h2>
+            <p className="text-sm text-gray-500 mb-4">Conduci con seguridad hacia {activeTrip.to}</p>
+            <button onClick={() => { setActiveTrip(null); setCodeInput(''); setCodeVerified(false); }} className="w-full h-12 rounded-2xl bg-[#0EA5A0] text-white font-semibold text-sm shadow-lg shadow-[#0EA5A0]/25 active:scale-95 transition-all">Completar viaje</button>
+          </div>
+        </div>
+      )}
       </div>
     </div>
   );
