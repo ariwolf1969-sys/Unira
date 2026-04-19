@@ -1,9 +1,7 @@
-'use client';
+use client;
 
 import { useEffect, useRef } from 'react';
 import L from 'leaflet';
-import 'leaflet/dist/leaflet.css';
-import 'leaflet/dist/leaflet.css';
 import 'leaflet/dist/leaflet.css';
 
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -25,54 +23,22 @@ export default function MapView({ origin, destination }: MapViewProps) {
 
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
-    const map = L.map(containerRef.current, {
-      zoomControl: false,
-      attributionControl: false,
-    }).setView([-34.6037, -58.3816], 13);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      maxZoom: 19,
-    }).addTo(map);
+    const map = L.map(containerRef.current, { zoomControl: false, attributionControl: false }).setView([-34.6037, -58.3816], 13);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
     layerRef.current = L.layerGroup().addTo(map);
     mapRef.current = map;
     const fixSize = () => { if (mapRef.current) mapRef.current.invalidateSize(); };
-    setTimeout(fixSize, 100);
-    setTimeout(fixSize, 300);
-    setTimeout(fixSize, 600);
+    setTimeout(fixSize, 100); setTimeout(fixSize, 300); setTimeout(fixSize, 600);
     window.addEventListener('resize', fixSize);
-    return () => {
-      window.removeEventListener('resize', fixSize);
-      map.remove();
-      mapRef.current = null;
-      layerRef.current = null;
-    };
+    return () => { window.removeEventListener('resize', fixSize); map.remove(); mapRef.current = null; layerRef.current = null; };
   }, []);
 
   useEffect(() => {
-    const map = mapRef.current;
-    const layer = layerRef.current;
-    if (!map || !layer) return;
-    layer.clearLayers();
-    const bounds: L.LatLngBounds = L.latLngBounds([]);
-    if (origin) {
-      const m = L.circleMarker([origin.lat, origin.lng], { radius: 8, fillColor: '#22C55E', fillOpacity: 1, color: '#fff', weight: 3 });
-      m.addTo(layer);
-      if (origin.name) m.bindTooltip(origin.name, { direction: 'top', offset: [0, -10], className: 'unira-tooltip' });
-      bounds.extend([origin.lat, origin.lng]);
-    }
-    if (destination) {
-      const m = L.circleMarker([destination.lat, destination.lng], { radius: 8, fillColor: '#EF4444', fillOpacity: 1, color: '#fff', weight: 3 });
-      m.addTo(layer);
-      if (destination.name) m.bindTooltip(destination.name, { direction: 'top', offset: [0, -10], className: 'unira-tooltip' });
-      bounds.extend([destination.lat, destination.lng]);
-    }
-    if (origin && destination) {
-      L.polyline([[origin.lat, origin.lng], [destination.lat, destination.lng]], { color: '#0EA5A0', weight: 4, opacity: 0.8, dashArray: '10, 14' }).addTo(layer);
-      if (bounds.isValid()) map.fitBounds(bounds, { padding: [60, 60], maxZoom: 16 });
-    } else if (origin) {
-      map.setView([origin.lat, origin.lng], 14);
-    } else {
-      map.setView([-34.6037, -58.3816], 13);
-    }
+    const map = mapRef.current; const layer = layerRef.current; if (!map || !layer) return;
+    layer.clearLayers(); const bounds: L.LatLngBounds = L.latLngBounds([]);
+    if (origin) { const m = L.circleMarker([origin.lat, origin.lng], { radius: 8, fillColor: '#22C55E', fillOpacity: 1, color: '#fff', weight: 3 }); m.addTo(layer); if (origin.name) m.bindTooltip(origin.name, { direction: 'top', offset: [0, -10], className: 'unira-tooltip' }); bounds.extend([origin.lat, origin.lng]); }
+    if (destination) { const m = L.circleMarker([destination.lat, destination.lng], { radius: 8, fillColor: '#EF4444', fillOpacity: 1, color: '#fff', weight: 3 }); m.addTo(layer); if (destination.name) m.bindTooltip(destination.name, { direction: 'top', offset: [0, -10], className: 'unira-tooltip' }); bounds.extend([destination.lat, destination.lng]); }
+    if (origin && destination) { L.polyline([[origin.lat, origin.lng], [destination.lat, destination.lng]], { color: '#0EA5A0', weight: 4, opacity: 0.8, dashArray: '10, 14' }).addTo(layer); if (bounds.isValid()) map.fitBounds(bounds, { padding: [60, 60], maxZoom: 16 }); } else if (origin) { map.setView([origin.lat, origin.lng], 14); } else { map.setView([-34.6037, -58.3816], 13); }
   }, [origin, destination]);
 
   return (
