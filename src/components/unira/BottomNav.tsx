@@ -13,7 +13,7 @@ const navItems = [
 
 const screensWithNav = new Set([
   'home', 'ride', 'food', 'send', 'history', 'profile', 'wallet', 'notifications',
-  'chat', 'admin', 'food-restaurant',
+  'chat', 'admin', 'food-restaurant', 'driver',
 ]);
 
 export function BottomNav() {

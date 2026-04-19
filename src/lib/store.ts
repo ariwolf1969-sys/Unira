@@ -335,7 +335,15 @@ const sampleWalletMovements: WalletMovement[] = [
 
 export const useAppStore = create<AppStore>((set, get) => ({
   // Auth
-  user: null,
+  user: {
+    uid: 'demo',
+    email: 'demo@unira.app',
+    name: 'Usuario Demo',
+    phone: '+54 11 5555-0000',
+    avatar: '',
+    role: 'passenger',
+    isDriverApproved: true,
+  },
   setUser: (user) => set({ user }),
   isFirebaseReady: false,
   setIsFirebaseReady: (v) => set({ isFirebaseReady: v }),

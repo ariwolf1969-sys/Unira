@@ -28,15 +28,7 @@ export default function HomePage() {
   const emptySubscribe = () => () => {};
   const mounted = useSyncExternalStore(emptySubscribe, () => true, () => false);
 
-  // Check localStorage for firebase config on mount
-  useEffect(() => {
-    if (mounted) {
-      const storedConfig = localStorage.getItem('unira_firebase_config');
-      if (storedConfig) {
-        useAppStore.getState().setIsFirebaseReady(true);
-      }
-    }
-  }, [mounted]);
+// Demo mode: skip Firebase config check
 
   // Auto-dismiss toast
   useEffect(() => {
@@ -89,12 +81,7 @@ export default function HomePage() {
   // Determine if this screen should have dark auth-style background
   const isDarkScreen = ['splash', 'setup', 'auth', 'role'].includes(currentScreen);
 
-  // Auto-start at splash if we're on home but there's no user
-  useEffect(() => {
-    if (mounted && !user && currentScreen === 'home') {
-      useAppStore.getState().setCurrentScreen('splash');
-    }
-  }, [mounted, user, currentScreen]);
+// Demo mode: user is pre-loaded, skip splash
 
   if (!mounted) return null;
 
@@ -105,7 +92,7 @@ export default function HomePage() {
   };
 
   return (
-    <div className={`mobile-app relative ${isDarkScreen ? '' : ''}`}>
+    <div suppressHydrationWarning className={`mobile-app relative ${isDarkScreen ? '' : ''}`}>
       {/* Toast notification overlay */}
       {toastMessage && (
         <div className="absolute top-4 left-4 right-4 z-[100] animate-[slideInUp_0.3s_ease-out]">
