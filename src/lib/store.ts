@@ -8,6 +8,7 @@ export interface User {
   name: string;
   phone: string;
   avatar: string;
+  dni: string;
   role: 'passenger' | 'driver';
   isDriverApproved: boolean;
 }
@@ -342,6 +343,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
     email: 'demo@unira.app',
     name: 'Usuario Demo',
     phone: '+54 11 5555-0000',
+    dni: '',
     avatar: '',
     role: 'passenger',
     isDriverApproved: true,
