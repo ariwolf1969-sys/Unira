@@ -97,8 +97,15 @@ export function ProfileScreen() {
   // Handle menu item click
   const handleMenuClick = useCallback(
     (item: MenuItemDef) => {
+      if (item.action === 'personal') {
+        setFormName(store.user?.name || '');
+        setFormPhone(store.user?.phone || '');
+        setFormEmail(store.user?.email || '');
+        setFormDni(store.user?.dni || '');
+        setEditing(true);
+        return;
+      }
       const messages: Record<string, string> = {
-        personal: 'Sección de datos personales próximamente',
         payment: 'Métodos de pago próximamente',
         favorites: 'Direcciones favoritas próximamente',
         settings: 'Configuración próximamente',
@@ -122,6 +129,7 @@ export function ProfileScreen() {
   }, [store]);
 
   return (
+    <>
     <div className="relative min-h-[100dvh] bg-[#F5F7FA] pb-24">
       {/* Header */}
       <div className="flex items-center gap-3 px-4 pt-4 pb-2">
@@ -281,5 +289,6 @@ export function ProfileScreen() {
           </div>
         </div>
       )}
+    </>
   );
 }
