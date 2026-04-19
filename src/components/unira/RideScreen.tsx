@@ -117,6 +117,7 @@ export function RideScreen() {
   const [localVehicle, setLocalVehicle] = useState(store.selectedVehicle);
   const [paymentMethod, setPaymentMethod] = useState('cash');
   const [driver, setDriver] = useState<DriverData | null>(null);
+  const [verificationCode, setVerificationCode] = useState('');
   const [tripDistance, setTripDistance] = useState(0);
   const [tripDuration, setTripDuration] = useState(0);
   const [tripFare, setTripFare] = useState(0);
@@ -279,6 +280,9 @@ export function RideScreen() {
     if (!localOrigin || !localDest) return;
     store.setSelectedVehicle(localVehicle);
     setDriver(getRandomDriver());
+    const code = String(Math.floor(1000 + Math.random() * 9000));
+    setVerificationCode(code);
+    store.setTripVerificationCode(code);
     transitionTo('searching');
   }, [localOrigin, localDest, localVehicle, store, transitionTo]);
 
@@ -415,6 +419,8 @@ export function RideScreen() {
     setTripProgress(0);
     setTripEta(0);
     setDriver(null);
+    setVerificationCode('');
+    store.setTripVerificationCode(null);
     store.setOrigin(null);
     store.setDestination(null);
     store.setCurrentTrip(null);
@@ -794,6 +800,22 @@ export function RideScreen() {
                   Mensaje
                 </button>
               </div>
+            </div>
+
+            {/* Verification code */}
+            {verificationCode && (
+              <div className="mt-4 pt-4 border-t border-gray-100 text-center">
+                <p className="text-xs text-gray-500 mb-2">Codigo de verificacion</p>
+                <div className="flex justify-center gap-2">
+                  {verificationCode.split(String()).map((d, i) => (
+                    <div key={i} className="w-10 h-12 rounded-xl bg-[#0EA5A0]/10 border-2 border-[#0EA5A0]/30 flex items-center justify-center">
+                      <span className="text-xl font-bold text-[#0EA5A0]">{d}</span>
+                    </div>
+                  ))}
+                </div>
+                <p className="text-[10px] text-gray-400 mt-2">Mostra este codigo al conductor</p>
+              </div>
+            )}
             </div>
 
             <p className="text-center text-xs text-gray-400 mt-4">El conductor llega a tu punto de partida...</p>

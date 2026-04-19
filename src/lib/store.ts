@@ -117,6 +117,8 @@ interface AppStore {
   setCurrentTrip: (t: Trip | null) => void;
   tripHistory: Trip[];
   addToHistory: (t: Trip) => void;
+  tripVerificationCode: string | null;
+  setTripVerificationCode: (code: string | null) => void;
 
   // Wallet
   walletBalance: number;
@@ -371,6 +373,8 @@ export const useAppStore = create<AppStore>((set, get) => ({
   tripHistory: sampleTripHistory,
   addToHistory: (t) =>
     set((s) => ({ tripHistory: [t, ...s.tripHistory] })),
+  tripVerificationCode: null,
+  setTripVerificationCode: (code) => set({ tripVerificationCode: code }),
 
   // Wallet
   walletBalance: 15000,
