@@ -53,6 +53,7 @@ export function DriverScreen() {
   const [activeTrip, setActiveTrip] = useState<typeof pendingRequests[0] | null>(null);
   const [codeInput, setCodeInput] = useState('');
   const [codeVerified, setCodeVerified] = useState(false);
+  const [codeError, setCodeError] = useState(false);
   const [selectedTab, setSelectedTab] = useState<'overview' | 'trips' | 'earnings'>('overview');
 
   const userName = user?.name || 'Conductor';
@@ -75,10 +76,11 @@ export function DriverScreen() {
       setCodeVerified(true);
       showToast('Codigo verificado! Viaje iniciado', 'success');
     } else if (codeInput.length === 4) {
-      showToast('Codigo incorrecto, intenta de nuevo', 'error');
+      setCodeError(true);
       setCodeInput('');
       const inp = document.querySelectorAll('.drv-code');
       if (inp[0]) inp[0].focus();
+      setTimeout(() => setCodeError(false), 2000);
     }
   };
 
@@ -456,7 +458,10 @@ export function DriverScreen() {
               </div>
             </div>
             <p className="text-sm font-semibold text-gray-700 mb-2 text-center">Ingresa el codigo de 4 digitos</p>
-            <div className="flex justify-center gap-2 mb-2">
+            <div className="flex justify-center gap-2 mb-2 relative">
+              {codeError && (
+                <p className="absolute -top-6 left-0 right-0 text-center text-xs font-semibold text-red-500 animate-pulse">Codigo incorrecto</p>
+              )}
               {[0,1,2,3].map((i) => (
                 <input key={i} type="text" inputMode="numeric" maxLength={1} value={codeInput[i] || ''} onChange={(e) => { const v = e.target.value.replace(/[^0-9]/g, ''); if (v) { const c = codeInput.split(''); c[i] = v[0]; const nc = c.join(''); setCodeInput(nc); const inp = document.querySelectorAll('.drv-code'); if (i < 3 && inp[i+1]) inp[i+1].focus(); } }} onKeyDown={(e) => { if (e.key === 'Backspace') { if (!codeInput[i] && i > 0) { setCodeInput(codeInput.slice(0, i)); const inp = document.querySelectorAll('.drv-code'); if (inp[i-1]) inp[i-1].focus(); } else { const c = codeInput.split(''); c[i] = ''; setCodeInput(c.join('')); } } }} className="drv-code w-12 h-12 rounded-xl text-center text-xl font-bold bg-white border-2 border-gray-200 outline-none focus:border-[#0EA5A0] transition-all" />
               ))}
@@ -472,7 +477,7 @@ export function DriverScreen() {
 
       {/* Trip Verified */}
       {activeTrip && codeVerified && (
-        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center px-6">
+        <div className="fixed inset-0 z-[999] bg-black/50 backdrop-blur-sm flex items-center justify-center px-6">
           <div className="w-full max-w-sm bg-white rounded-3xl p-6 text-center shadow-xl">
             <div className="w-16 h-16 rounded-full bg-emerald-100 flex items-center justify-center mx-auto mb-4">
               <CheckCircle className="w-8 h-8 text-emerald-600" />
