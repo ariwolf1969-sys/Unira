@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { Heart, MessageCircle, Plus, X, Users, LogOut, Send } from 'lucide-react';
 import { useAppStore, communitiesData } from '@/lib/store';
 export function CommunitiesScreen() {
-  const { joinedCommunities, communityPosts, joinCommunity, leaveCommunity, addPost, likePost } = useAppStore();
+  const joinedCommunities = useAppStore(s=>s.joinedCommunities)||[]; const communityPosts = useAppStore(s=>s.communityPosts)||[]; const joinCommunity = useAppStore(s=>s.joinCommunity)||(()=>{}); const leaveCommunity = useAppStore(s=>s.leaveCommunity)||(()=>{}); const addPost = useAppStore(s=>s.addPost)||(()=>{}); const likePost = useAppStore(s=>s.likePost)||(()=>{});
   const [selComm, setSelComm] = useState('deportes');
   const [showExplore, setShowExplore] = useState(false);
   const [showNewPost, setShowNewPost] = useState(false);
