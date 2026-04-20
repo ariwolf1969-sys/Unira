@@ -1,7 +1,7 @@
 'use client';
 import { useState } from 'react';
 import { Heart, MessageCircle, Plus, X, Users, LogOut, Send } from 'lucide-react';
-import { useAppStore, communitiesData } from '@/lib/store';
+import { useAppStore, communitiesData, productsData } from '@/lib/store';
 export function CommunitiesScreen() {
   const joinedCommunities = useAppStore(s=>s.joinedCommunities)||[]; const comments = useAppStore(s=>s.comments)||[]; const addComment = useAppStore(s=>s.addComment)||(()=>{}); const likeComment = useAppStore(s=>s.likeComment)||(()=>{}); const communityPosts = useAppStore(s=>s.communityPosts)||[]; const joinCommunity = useAppStore(s=>s.joinCommunity)||(()=>{}); const leaveCommunity = useAppStore(s=>s.leaveCommunity)||(()=>{}); const addPost = useAppStore(s=>s.addPost)||(()=>{}); const likePost = useAppStore(s=>s.likePost)||(()=>{});
   const [selComm, setSelComm] = useState('deportes');
@@ -43,7 +43,28 @@ export function CommunitiesScreen() {
           </div>
         </div>
       )}
-      <div className="space-y-3 px-3">
+      
+      {selComm === 'compras' && (
+        <div className="px-3 pb-4">
+          <div className="flex justify-between items-center mb-3"><h3 className="font-bold text-gray-800">Ofertas del dia</h3><span className="text-xs text-purple-600 font-medium">Comision cooperativa por venta</span></div>
+          <div className="grid grid-cols-2 gap-3">
+            {productsData.map(p => (
+              <div key={p.id} className="bg-white rounded-xl overflow-hidden shadow-sm border">
+                <div className="h-28 bg-gradient-to-br from-purple-100 to-indigo-100 flex items-center justify-center text-4xl">{p.store === 'MercadoLibre' ? '🏪' : p.store === 'Amazon' ? '📦' : '🎁'}</div>
+                <div className="p-2">
+                  <p className="text-xs text-gray-500">{p.store}</p>
+                  <p className="text-sm font-medium text-gray-800 line-clamp-2">{p.name}</p>
+                  <p className="text-lg font-bold text-green-600">${p.price.toLocaleString()}</p>
+                  <p className="text-xs text-gray-400 line-through">${p.originalPrice.toLocaleString()}</p>
+                  <p className="text-xs text-purple-600 mt-1">Comision: {p.commission}%</p>
+                  <button className="w-full mt-2 py-1.5 bg-purple-600 text-white text-xs rounded-full font-medium">Comprar</button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+<div className="space-y-3 px-3" style={{display: selComm==="compras" ? "none" : undefined}}>
         {filtered.length === 0 ? (
           <div className="text-center py-10 text-gray-400"><Users size={40} className="mx-auto mb-2 opacity-50"/><p>Sin publicaciones todavia</p><p className="text-sm">Sé el primero en publicar!</p></div>
         ) : filtered.map(p => (

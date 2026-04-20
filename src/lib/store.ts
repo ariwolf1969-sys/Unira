@@ -370,11 +370,23 @@ export const sampleComments: Comment[] = [
   { id:'c4', postId:'5', authorName:'Lucia M.', authorInitial:'LM', content:'Mucho animo! Yo corro hace 1 ano y la maraton es increible', likes:8, isLiked:false, createdAt:'2025-04-21' }
 ];
 
+
+export interface Product { id:string; name:string; price:number; originalPrice:number; image:string; store:string; commission:number; category:string; rating:number; }
+export const productsData: Product[] = [
+  { id:'p1', name:'Auriculares Bluetooth Pro', price:8990, originalPrice:14990, image:'', store:'MercadoLibre', commission:5, category:'Tecnologia', rating:4.5 },
+  { id:'p2', name:'Zapatillas Running Ultra', price:18990, originalPrice:24990, image:'', store:'Amazon', commission:4, category:'Deportes', rating:4.7 },
+  { id:'p3', name:'Smartwatch Fitness Band', price:6990, originalPrice:9990, image:'', store:'Temu', commission:8, category:'Tecnologia', rating:4.2 },
+  { id:'p4', name:'Set de Sartenes Antiadherente', price:12990, originalPrice:18990, image:'', store:'MercadoLibre', commission:6, category:'Hogar', rating:4.8 },
+  { id:'p5', name:'Camiseta Algodon Premium', price:4990, originalPrice:7990, image:'', store:'Temu', commission:10, category:'Ropa', rating:4.3 },
+  { id:'p6', name:'Cargador Inalambrico Rapido', price:5990, originalPrice:8990, image:'', store:'Amazon', commission:5, category:'Tecnologia', rating:4.6 },
+  { id:'p7', name:'Lampara LED Inteligente', price:7490, originalPrice:11990, image:'', store:'MercadoLibre', commission:7, category:'Hogar', rating:4.4 },
+  { id:'p8', name:'Mochila Laptop Impermeable', price:15990, originalPrice:21990, image:'', store:'Temu', commission:9, category:'Accesorios', rating:4.5 }
+];
 export const communitiesData: Community[] = [
   { id:'deportes', name:'Deportes', description:'Noticias, resultados y debate deportivo', icon:'⚽', color:'#10B981', bg:'#ECFDF5', members:2840, postsCount:156, isJoined:true },
   { id:'empleos', name:'Empleos', description:'Ofertas laborales y comparte tu CV', icon:'💼', color:'#3B82F6', bg:'#EFF6FF', members:5120, postsCount:342, isJoined:true },
   { id:'eventos', name:'Eventos', description:'Eventos por provincia y fecha', icon:'🎉', color:'#8B5CF6', bg:'#F5F3FF', members:1890, postsCount:89, isJoined:false },
-  { id:'compras', name:'Compras compartidas', description:'Compra en grupo y ahorra', icon:'🛒', color:'#F59E0B', bg:'#FFFBEB', members:960, postsCount:67, isJoined:false }
+  { id:'compras', name:'Compras', description:'Encuentra las mejores ofertas con comision para la cooperativa', icon:'🛒', color:'#F59E0B', bg:'#FFFBEB', members:960, postsCount:67, isJoined:false }
 ];
 
 export const samplePosts: CommunityPost[] = [
