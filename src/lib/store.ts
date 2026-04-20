@@ -160,6 +160,17 @@ interface AppStore {
   setIsOnline: (v: boolean) => void;
 
   // UI
+
+  // Communities
+  joinedCommunities: string[];
+  communityPosts: CommunityPost[];
+  comments: Comment[];
+  joinCommunity: (id: string) => void;
+  leaveCommunity: (id: string) => void;
+  addPost: (cid: string, content: string, author: string, init: string) => void;
+  likePost: (id: string) => void;
+  addComment: (pid: string, content: string, author: string, init: string) => void;
+  likeComment: (id: string) => void;
   isLoading: boolean;
   setLoading: (v: boolean) => void;
   toastMessage: string;
@@ -471,6 +482,17 @@ export interface Comment {
 }
 
 export const sampleComments: Comment[] = [
+
+  // Communities
+  joinedCommunities: ['deportes','empleos'],
+  communityPosts: samplePosts,
+  comments: sampleComments,
+  joinCommunity: (id) => set((s) => ({ joinedCommunities: [...s.joinedCommunities, id] })),
+  leaveCommunity: (id) => set((s) => ({ joinedCommunities: s.joinedCommunities.filter(x=>x!==id) })),
+  addPost: (cid, content, author, init) => set((s) => ({ communityPosts: [{ id:Date.now().toString(), communityId:cid, authorName:author, authorInitial:init, content, likes:0, comments:0, isLiked:false, createdAt:'2025-04-21' }, ...s.communityPosts] })),
+  likePost: (id) => set((s) => ({ communityPosts: s.communityPosts.map(p => p.id===id ? {...p, isLiked:!p.isLiked, likes:p.isLiked?p.likes-1:p.likes+1} : p) })),
+  addComment: (pid, content, author, init) => set((s) => ({ comments: [{ id:Date.now().toString(), postId:pid, authorName:author, authorInitial:init, content, likes:0, isLiked:false, createdAt:'2025-04-21' }, ...s.comments], communityPosts: s.communityPosts.map(p => p.id===pid ? {...p, comments:p.comments+1} : p) })),
+  likeComment: (id) => set((s) => ({ comments: s.comments.map(c => c.id===id ? {...c, isLiked:!c.isLiked, likes:c.isLiked?c.likes-1:c.likes+1} : c) })),
   { id:'c1', postId:'1', authorName:'Juan P.', authorInitial:'JP', content:'Totalmente de acuerdo, De La Cruz esta como un demonio!', likes:5, isLiked:false, createdAt:'2025-04-21' },
   { id:'c2', postId:'1', authorName:'Maria L.', authorInitial:'ML', content:'El segundo gol fue una jugada de manual', likes:3, isLiked:true, createdAt:'2025-04-21' },
   { id:'c3', postId:'3', authorName:'Pedro S.', authorInitial:'PS', content:'Yo aplique, ojala me llamen!', likes:2, isLiked:false, createdAt:'2025-04-21' },
