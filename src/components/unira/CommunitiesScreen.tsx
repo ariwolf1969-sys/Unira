@@ -72,7 +72,7 @@ export function CommunitiesScreen() {
       </div>
 
       {showExplore && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-end justify-center">
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center">
           <div className="bg-white w-full max-w-md rounded-t-2xl p-5 max-h-[80vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-4"><h2 className="text-lg font-bold">Explorar comunidades</h2><button onClick={() => setShowExplore(false)}><X size={20}/></button></div>
             <div className="space-y-3">
