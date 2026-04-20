@@ -3,15 +3,15 @@ import { useState } from 'react';
 import { Heart, MessageCircle, Plus, X, Users, LogOut, Send } from 'lucide-react';
 import { useAppStore, communitiesData } from '@/lib/store';
 export function CommunitiesScreen() {
-  const joinedCommunities = useAppStore(s=>s.joinedCommunities)||[]; const communityPosts = useAppStore(s=>s.communityPosts)||[]; const joinCommunity = useAppStore(s=>s.joinCommunity)||(()=>{}); const leaveCommunity = useAppStore(s=>s.leaveCommunity)||(()=>{}); const addPost = useAppStore(s=>s.addPost)||(()=>{}); const likePost = useAppStore(s=>s.likePost)||(()=>{});
+  const joinedCommunities = useAppStore(s=>s.joinedCommunities)||[]; const comments = useAppStore(s=>s.comments)||[]; const addComment = useAppStore(s=>s.addComment)||(()=>{}); const likeComment = useAppStore(s=>s.likeComment)||(()=>{}); const communityPosts = useAppStore(s=>s.communityPosts)||[]; const joinCommunity = useAppStore(s=>s.joinCommunity)||(()=>{}); const leaveCommunity = useAppStore(s=>s.leaveCommunity)||(()=>{}); const addPost = useAppStore(s=>s.addPost)||(()=>{}); const likePost = useAppStore(s=>s.likePost)||(()=>{});
   const [selComm, setSelComm] = useState('deportes');
   const [showExplore, setShowExplore] = useState(false);
   const [showNewPost, setShowNewPost] = useState(false);
-  const [postText, setPostText] = useState('');
+  const [postText, setPostText] = useState(''); const [showComments, setShowComments] = useState<string|null>(null); const [commentText, setCommentText] = useState('');
   const joined = communitiesData.filter(c => joinedCommunities.includes(c.id));
   const filtered = communityPosts.filter(p => p.communityId === selComm);
   const selData = communitiesData.find(c => c.id === selComm);
-  const handlePost = () => { if(!postText.trim()) return; addPost(selComm,postText.trim(),'Tu','TU'); setPostText(''); setShowNewPost(false); };
+  const handlePost = () => { if(!postText.trim()) return; addPost(selComm,postText.trim(),'Tu','TU'); setPostText(''); setShowNewPost(false); }; const postComments = showComments ? comments.filter(c=>c.postId===showComments) : []; const handleComment = () => { if(!commentText.trim()||!showComments) return; addComment(showComments,commentText.trim(),'Tu','TU'); setCommentText(''); };
   return (
     <div className="pb-20 bg-gray-50 min-h-screen">
       <div className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white p-4 pt-6">
@@ -63,7 +63,7 @@ export function CommunitiesScreen() {
               <button onClick={() => likePost(p.id)} className={"flex items-center gap-1 text-sm " + (p.isLiked ? "text-red-500" : "text-gray-400")}>
                 <Heart size={16} fill={p.isLiked ? "currentColor" : "none"}/><span>{p.likes}</span>
               </button>
-              <button className="flex items-center gap-1 text-sm text-gray-400">
+              <button className="flex items-center gap-1 text-sm text-gray-400" onClick={() => setShowComments(p.id)}>
                 <MessageCircle size={16}/><span>{p.comments}</span>
               </button>
             </div>
@@ -94,6 +94,25 @@ export function CommunitiesScreen() {
             <p className="text-sm text-gray-500 mb-3">En: {selData?.icon} {selData?.name}</p>
             <textarea value={postText} onChange={e => setPostText(e.target.value)} placeholder="Escribe algo..." className="w-full border rounded-xl p-3 text-sm h-28 resize-none focus:outline-none focus:ring-2 focus:ring-purple-400"/>
             <button onClick={handlePost} className="mt-3 w-full flex items-center justify-center gap-2 bg-purple-600 text-white py-3 rounded-xl font-medium"><Send size={16}/> Publicar</button>
+          </div>
+        </div>
+      )}
+
+      {showComments && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center">
+          <div className="bg-white w-full max-w-md rounded-2xl p-5 mx-4">
+            <div className="flex justify-between items-center mb-4"><h2 className="text-lg font-bold">Comentarios</h2><button onClick={() => setShowComments(null)}><X size={20}/></button></div>
+            <div className="space-y-3 max-h-60 overflow-y-auto mb-3">
+              {postComments.length === 0 ? <p className="text-center text-gray-400 py-4">Sin comentarios todavia</p> : postComments.map(c => (
+                <div key={c.id} className="flex gap-2">
+                  <div className="w-7 h-7 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center text-xs font-bold flex-shrink-0">{c.authorInitial}</div>
+                  <div className="flex-1"><p className="text-xs font-medium text-gray-700">{c.authorName}</p><p className="text-sm text-gray-600">{c.content}</p>
+                    <button onClick={() => likeComment(c.id)} className={"text-xs mt-1 " + (c.isLiked?"text-red-500":"text-gray-400")}>{" " + (c.isLiked?"":"Me gusta") + (c.likes>0?" ("+c.likes+")":"")}</button>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="flex gap-2"><input value={commentText} onChange={e=>setCommentText(e.target.value)} placeholder="Escribe un comentario..." className="flex-1 border rounded-full px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-400"/><button onClick={handleComment} className="p-2 bg-purple-600 text-white rounded-full"><Send size={16}/></button></div>
           </div>
         </div>
       )}

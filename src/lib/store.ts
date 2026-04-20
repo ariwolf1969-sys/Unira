@@ -464,6 +464,18 @@ export const useAppStore = create<AppStore>((set, get) => ({
   showToast: (msg, type) => set({ toastMessage: msg, toastType: type }),
 }));
 
+
+export interface Comment {
+  id: string; postId: string; authorName: string; authorInitial: string;
+  content: string; likes: number; isLiked: boolean; createdAt: string;
+}
+
+export const sampleComments: Comment[] = [
+  { id:'c1', postId:'1', authorName:'Juan P.', authorInitial:'JP', content:'Totalmente de acuerdo, De La Cruz esta como un demonio!', likes:5, isLiked:false, createdAt:'2025-04-21' },
+  { id:'c2', postId:'1', authorName:'Maria L.', authorInitial:'ML', content:'El segundo gol fue una jugada de manual', likes:3, isLiked:true, createdAt:'2025-04-21' },
+  { id:'c3', postId:'3', authorName:'Pedro S.', authorInitial:'PS', content:'Yo aplique, ojala me llamen!', likes:2, isLiked:false, createdAt:'2025-04-21' },
+  { id:'c4', postId:'5', authorName:'Lucia M.', authorInitial:'LM', content:'Mucho animo! Yo corro hace 1 ano y la maraton es increible', likes:8, isLiked:false, createdAt:'2025-04-21' }
+];
 export const communitiesData: Community[] = [
   { id:'deportes', name:'Deportes', description:'Noticias, resultados y debate deportivo', icon:'⚽', color:'#10B981', bg:'#ECFDF5', members:2840, postsCount:156, isJoined:true },
   { id:'empleos', name:'Empleos', description:'Ofertas laborales y comparte tu CV', icon:'💼', color:'#3B82F6', bg:'#EFF6FF', members:5120, postsCount:342, isJoined:true },
