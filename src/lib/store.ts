@@ -103,6 +103,12 @@ export interface CommunityPost {
 
 // ─── Store Interface ─────────────────────────────────────────────────────────
 
+
+export interface Comment {
+  id: string; postId: string; authorName: string; authorInitial: string;
+  content: string; likes: number; isLiked: boolean; createdAt: string;
+}
+
 interface AppStore {
   // Auth
   user: User | null;
@@ -485,11 +491,6 @@ export const useAppStore = create<AppStore>((set, get) => ({
   addComment: (pid, content, author, init) => set((s) => ({ comments: [{ id:Date.now().toString(), postId:pid, authorName:author, authorInitial:init, content, likes:0, isLiked:false, createdAt:'2025-04-21' }, ...s.comments], communityPosts: s.communityPosts.map(p => p.id===pid ? {...p, comments:p.comments+1} : p) })),
   likeComment: (id) => set((s) => ({ comments: s.comments.map(c => c.id===id ? {...c, isLiked:!c.isLiked, likes:c.isLiked?c.likes-1:c.likes+1} : c) })),
 }));
-
-export interface Comment {
-  id: string; postId: string; authorName: string; authorInitial: string;
-  content: string; likes: number; isLiked: boolean; createdAt: string;
-}
 
 export const sampleComments: Comment[] = [
   { id:'c1', postId:'1', authorName:'Juan P.', authorInitial:'JP', content:'Totalmente de acuerdo, De La Cruz esta como un demonio!', likes:5, isLiked:false, createdAt:'2025-04-21' },
