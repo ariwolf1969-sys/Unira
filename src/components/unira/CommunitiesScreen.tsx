@@ -46,7 +46,7 @@ export function CommunitiesScreen() {
       
       {selComm === 'compras' && (
         <div className="px-3 pb-4">
-          <div className="flex justify-between items-center mb-3"><h3 className="font-bold text-gray-800">Ofertas del dia</h3><span className="text-xs text-purple-600 font-medium">Comision cooperativa por venta</span></div>
+          <div className="flex justify-between items-center mb-3"><h3 className="font-bold text-gray-800">Ofertas del dia</h3></div>
           <div className="grid grid-cols-2 gap-3">
             {productsData.map(p => (
               <div key={p.id} className="bg-white rounded-xl overflow-hidden shadow-sm border">
@@ -56,7 +56,7 @@ export function CommunitiesScreen() {
                   <p className="text-sm font-medium text-gray-800 line-clamp-2">{p.name}</p>
                   <p className="text-lg font-bold text-green-600">${p.price.toLocaleString()}</p>
                   <p className="text-xs text-gray-400 line-through">${p.originalPrice.toLocaleString()}</p>
-                  <p className="text-xs text-purple-600 mt-1">Comision: {p.commission}%</p>
+                  
                   <button className="w-full mt-2 py-1.5 bg-purple-600 text-white text-xs rounded-full font-medium">Comprar</button>
                 </div>
               </div>
