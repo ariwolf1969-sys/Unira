@@ -20,7 +20,7 @@ import { NotificationsScreen } from '@/components/unira/NotificationsScreen';
 import { AdminScreen } from '@/components/unira/AdminScreen';
 import { DriverScreen } from '@/components/unira/DriverScreen';
 import { CommunitiesScreen } from '@/components/unira/CommunitiesScreen';
-import { ReferralScreen }
+import { ReferralScreen } from '@/components/unira/ReferralScreen'
 import { ServicesScreen } from '@/components/unira/ServicesScreen';
 
 
