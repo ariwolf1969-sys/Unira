@@ -170,6 +170,11 @@ export function ProfileScreen() {
             </div>
           </div>
         </div>
+        <button onClick={() => navigateTo('referral')} className="flex items-center gap-3 p-3 bg-white rounded-xl shadow-sm border">
+            <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center"><span className="text-lg">🔗</span></div>
+            <div className="flex-1"><p className="font-medium text-gray-800">Invitar amigos</p><p className="text-xs text-gray-500">Gana premios por cada invitacion</p></div>
+            <span className="text-gray-400">{'>'}</span>
+          </button>
       </div>
 
       {/* Stats Row */}
