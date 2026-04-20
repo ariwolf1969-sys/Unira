@@ -15,6 +15,7 @@ import {
   Wallet,
   MessageCircle,
   Headphones,
+  Wrench,
   Shield,
   MapPin,
   Star,
@@ -91,9 +92,11 @@ const quickServices: QuickService[] = [
   { id: 'moto', label: 'UniraMoto', icon: Bike, color: '#F97316', action: 'ride-moto' },
   { id: 'food', label: 'UniraFood', icon: Utensils, color: '#EF4444', action: 'food' },
   { id: 'send', label: 'UniraEnvíos', icon: Package, color: '#3B82F6', action: 'send' },
+  { id: 'services', label: 'UniraServicios', icon: Wrench, color: '#EC4899', action: 'services' },
   { id: 'wallet', label: 'UniraPay', icon: Wallet, color: '#22C55E', action: 'wallet' },
   { id: 'chat', label: 'UniraChat', icon: MessageCircle, color: '#8B5CF6', action: 'chat' },
-  { id: 'help', label: 'UniraHelp', icon: Headphones, color: '#6B7280', action: 'help' },
+  { id: 'help', label: 'UniraHelp', icon: Headphones,
+  Wrench, color: '#6B7280', action: 'help' },
   { id: 'admin', label: 'UniraAdmin', icon: Shield, color: '#374151', action: 'admin' },
 ];
 
@@ -139,6 +142,9 @@ export function HomeScreen() {
         break;
       case 'send':
         setCurrentScreen('send');
+        break;
+      case 'services':
+        setCurrentScreen('services');
         break;
       case 'wallet':
         setCurrentScreen('wallet');
@@ -276,7 +282,7 @@ export function HomeScreen() {
             variants={staggerContainer}
             initial="hidden"
             animate="visible"
-            className="grid grid-cols-4 gap-y-5 gap-x-2"
+            className="grid grid-cols-4 gap-y-5 gap-x-2 max-h-[200px] overflow-y-auto scroll-smooth"
           >
             {quickServices.map((service) => {
               const Icon = service.icon;
