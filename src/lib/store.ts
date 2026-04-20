@@ -472,9 +472,9 @@ export const communitiesData: Community[] = [
 ];
 
 export const samplePosts: CommunityPost[] = [
-  { id:'1', communityId:'deportes', authorName:'Carlos M.', authorInitial:'CM', content:'Increible la goleada de River anoche! 4-0 con golazo de De La Cruz. Que opinan?', likes:24, comments:8, isLiked:false, tags:['Futbol','River Plate'], createdAt:new Date() },
-  { id:'2', communityId:'deportes', authorName:'Lucia P.', authorInitial:'LP', content:'Alguien ve el partido de tennis mañana? Estoy buscando compañia para ir al club.', likes:5, comments:12, isLiked:false, tags:['Tennis'], createdAt:new Date() },
-  { id:'3', communityId:'empleos', authorName:'Maria G.', authorInitial:'MG', content:'Se busca desarrollador Frontend con experiencia en React. Remoto, full-time. Interesados manden DM.', likes:18, comments:5, isLiked:true, tags:['React','Remoto'], createdAt:new Date() },
-  { id:'4', communityId:'empleos', authorName:'Diego R.', authorInitial:'DR', content:'Comparto mi CV: 5 años en marketing digital. Disponible inmediato. Any feedback welcome!', likes:9, comments:3, isLiked:false, tags:['CV','Marketing'], createdAt:new Date() },
-  { id:'5', communityId:'deportes', authorName:'Ana S.', authorInitial:'AS', content:'Maraton de Buenos Aires inscriptos? Entreno hace 3 meses, primera vez corriendo 42k!', likes:31, comments:15, isLiked:false, tags:['Running','Maraton'], createdAt:new Date() }
+  { id:'1', communityId:'deportes', authorName:'Carlos M.', authorInitial:'CM', content:'Increible la goleada de River anoche! 4-0 con golazo de De La Cruz. Que opinan?', likes:24, comments:8, isLiked:false, tags:['Futbol','River Plate'], createdAt:"2025-04-21" },
+  { id:'2', communityId:'deportes', authorName:'Lucia P.', authorInitial:'LP', content:'Alguien ve el partido de tennis mañana? Estoy buscando compañia para ir al club.', likes:5, comments:12, isLiked:false, tags:['Tennis'], createdAt:"2025-04-21" },
+  { id:'3', communityId:'empleos', authorName:'Maria G.', authorInitial:'MG', content:'Se busca desarrollador Frontend con experiencia en React. Remoto, full-time. Interesados manden DM.', likes:18, comments:5, isLiked:true, tags:['React','Remoto'], createdAt:"2025-04-21" },
+  { id:'4', communityId:'empleos', authorName:'Diego R.', authorInitial:'DR', content:'Comparto mi CV: 5 años en marketing digital. Disponible inmediato. Any feedback welcome!', likes:9, comments:3, isLiked:false, tags:['CV','Marketing'], createdAt:"2025-04-21" },
+  { id:'5', communityId:'deportes', authorName:'Ana S.', authorInitial:'AS', content:'Maraton de Buenos Aires inscriptos? Entreno hace 3 meses, primera vez corriendo 42k!', likes:31, comments:15, isLiked:false, tags:['Running','Maraton'], createdAt:"2025-04-21" }
 ];
