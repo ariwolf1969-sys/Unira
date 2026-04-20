@@ -88,7 +88,7 @@ export function CommunitiesScreen() {
         </div>
       )}
       {showNewPost && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-end justify-center">
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center">
           <div className="bg-white w-full max-w-md rounded-t-2xl p-5 pb-10">
             <div className="flex justify-between items-center mb-4"><h2 className="text-lg font-bold">Nueva publicacion</h2><button onClick={() => setShowNewPost(false)}><X size={20}/></button></div>
             <p className="text-sm text-gray-500 mb-3">En: {selData?.icon} {selData?.name}</p>
