@@ -19,6 +19,7 @@ import { ChatScreen } from '@/components/unira/ChatScreen';
 import { NotificationsScreen } from '@/components/unira/NotificationsScreen';
 import { AdminScreen } from '@/components/unira/AdminScreen';
 import { DriverScreen } from '@/components/unira/DriverScreen';
+import { CommunitiesScreen } from '@/components/unira/CommunitiesScreen';
 
 
 
@@ -72,6 +73,8 @@ export default function HomePage() {
       case 'admin':
         return <AdminScreen />;
       case 'food-restaurant':
+      case 'communities':
+        return <CommunitiesScreen />;
         return <FoodScreen />;
       default:
         return null;

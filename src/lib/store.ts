@@ -90,6 +90,16 @@ export interface ChatMessage {
   timestamp: Date;
   type: 'text' | 'quick';
 }
+export interface Community {
+  id: string; name: string; description: string; icon: string;
+  color: string; bg: string; members: number; postsCount: number; isJoined: boolean;
+}
+export interface CommunityPost {
+  id: string; communityId: string; authorName: string; authorInitial: string;
+  content: string; likes: number; comments: number; isLiked: boolean;
+  tags?: string[]; createdAt: Date;
+}
+
 
 // ─── Store Interface ─────────────────────────────────────────────────────────
 
@@ -453,3 +463,18 @@ export const useAppStore = create<AppStore>((set, get) => ({
   toastType: 'info',
   showToast: (msg, type) => set({ toastMessage: msg, toastType: type }),
 }));
+
+export const communitiesData: Community[] = [
+  { id:'deportes', name:'Deportes', description:'Noticias, resultados y debate deportivo', icon:'⚽', color:'#10B981', bg:'#ECFDF5', members:2840, postsCount:156, isJoined:true },
+  { id:'empleos', name:'Empleos', description:'Ofertas laborales y comparte tu CV', icon:'💼', color:'#3B82F6', bg:'#EFF6FF', members:5120, postsCount:342, isJoined:true },
+  { id:'eventos', name:'Eventos', description:'Eventos por provincia y fecha', icon:'🎉', color:'#8B5CF6', bg:'#F5F3FF', members:1890, postsCount:89, isJoined:false },
+  { id:'compras', name:'Compras compartidas', description:'Compra en grupo y ahorra', icon:'🛒', color:'#F59E0B', bg:'#FFFBEB', members:960, postsCount:67, isJoined:false }
+];
+
+export const samplePosts: CommunityPost[] = [
+  { id:'1', communityId:'deportes', authorName:'Carlos M.', authorInitial:'CM', content:'Increible la goleada de River anoche! 4-0 con golazo de De La Cruz. Que opinan?', likes:24, comments:8, isLiked:false, tags:['Futbol','River Plate'], createdAt:new Date() },
+  { id:'2', communityId:'deportes', authorName:'Lucia P.', authorInitial:'LP', content:'Alguien ve el partido de tennis mañana? Estoy buscando compañia para ir al club.', likes:5, comments:12, isLiked:false, tags:['Tennis'], createdAt:new Date() },
+  { id:'3', communityId:'empleos', authorName:'Maria G.', authorInitial:'MG', content:'Se busca desarrollador Frontend con experiencia en React. Remoto, full-time. Interesados manden DM.', likes:18, comments:5, isLiked:true, tags:['React','Remoto'], createdAt:new Date() },
+  { id:'4', communityId:'empleos', authorName:'Diego R.', authorInitial:'DR', content:'Comparto mi CV: 5 años en marketing digital. Disponible inmediato. Any feedback welcome!', likes:9, comments:3, isLiked:false, tags:['CV','Marketing'], createdAt:new Date() },
+  { id:'5', communityId:'deportes', authorName:'Ana S.', authorInitial:'AS', content:'Maraton de Buenos Aires inscriptos? Entreno hace 3 meses, primera vez corriendo 42k!', likes:31, comments:15, isLiked:false, tags:['Running','Maraton'], createdAt:new Date() }
+];

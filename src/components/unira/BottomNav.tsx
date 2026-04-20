@@ -1,19 +1,19 @@
 'use client';
 
 import { useAppStore } from '@/lib/store';
-import { House, Navigation, Compass, Clock, User } from 'lucide-react';
+import { House, Navigation, Users, Clock, User } from 'lucide-react';
 
 const navItems = [
   { id: 'home', label: 'Inicio', icon: House, screen: 'home' },
   { id: 'ride', label: 'Pedir', icon: Navigation, screen: 'ride' },
-  { id: 'food', label: 'Más', icon: Compass, screen: 'food' },
+  { id: 'communities', label: 'Comunidades', icon: Users, screen: 'communities' },
   { id: 'history', label: 'Actividad', icon: Clock, screen: 'history' },
   { id: 'profile', label: 'Cuenta', icon: User, screen: 'profile' },
 ];
 
 const screensWithNav = new Set([
   'home', 'ride', 'food', 'send', 'history', 'profile', 'wallet', 'notifications',
-  'chat', 'admin', 'food-restaurant', 'driver',
+  'chat', 'admin', 'food-restaurant', 'driver', 'communities',
 ]);
 
 export function BottomNav() {
