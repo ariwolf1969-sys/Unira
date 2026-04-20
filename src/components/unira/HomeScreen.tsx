@@ -167,10 +167,14 @@ export function HomeScreen() {
   return (
     <div className="min-h-[100dvh] bg-[#F5F7FA] pb-24">
       {/* ── Promo Banner ─── */}
-    <div className="mx-3 mt-3 bg-gradient-to-r from-purple-600 to-pink-500 rounded-2xl p-4 text-white flex items-center justify-between shadow-lg">
+    <motion.div
+      initial={{ opacity:0, y:-20 }}
+      animate={{ opacity:1, y:0 }}
+      transition={{ duration:0.5, delay:0.3 }}
+      className="mx-3 mt-3 bg-gradient-to-r from-purple-600 to-pink-500 rounded-2xl p-4 text-white flex items-center justify-between shadow-lg">
       <div><p className="font-bold text-sm">Viaje gratis este finde!</p><p className="text-xs text-purple-200 mt-0.5">Usa el codigo UNIRAFINDE antes del domingo</p></div>
-      <div className="text-center"><p className="text-2xl font-bold">48hs</p><p className="text-xs text-purple-200">restantes</p></div>
-    </div>
+      <div className="text-center"><p className="text-2xl font-bold animate-pulse">48hs</p><p className="text-xs text-purple-200">restantes</p></div>
+    </motion.div>
 
     {/* ── Header ───────────────────────────────────────────────────────── */}
       <motion.div
