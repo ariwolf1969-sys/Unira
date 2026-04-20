@@ -284,7 +284,7 @@ export function WalletScreen() {
 
       {/* Recargar Modal */}
       {showRecargarModal && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center">
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
           <div
             className="absolute inset-0 bg-black/50 backdrop-blur-sm"
             onClick={() => {
@@ -292,7 +292,7 @@ export function WalletScreen() {
               setRecargaAmount('');
             }}
           />
-          <div className="relative bg-white rounded-t-3xl w-full max-w-[430px] p-6 animate-[slideUp_0.3s_ease-out]">
+          <div className="relative bg-white rounded-2xl w-full max-w-[430px] p-6 animate-[slideUp_0.3s_ease-out]">
             {/* Handle */}
             <div className="w-10 h-1 bg-gray-200 rounded-full mx-auto mb-4" />
 
