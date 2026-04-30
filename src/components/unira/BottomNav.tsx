@@ -43,8 +43,8 @@ export function BottomNav() {
                   }`}
                   strokeWidth={isActive ? 2.5 : 2}
                 />
-                {/* Cart badge on food/compass icon */}
-                {item.id === 'food' && cart.length > 0 && (
+                {/* Cart badge - show on home tab when cart has items */}
+                {item.id === 'home' && cart.length > 0 && (
                   <span className="absolute -top-1.5 -right-2.5 w-4 h-4 bg-red-500 rounded-full text-white text-[9px] font-bold flex items-center justify-center">
                     {cart.length}
                   </span>

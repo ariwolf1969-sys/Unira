@@ -26,8 +26,11 @@ export interface Trip {
   driverPhoto?: string;
   driverVehicle?: string;
   rating?: number;
+  thirdParty?: string;
+  thirdPhone?: string;
   distance?: number;
   duration?: number;
+  waypoints?: Place[];
   createdAt: Date;
 }
 

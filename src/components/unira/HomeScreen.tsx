@@ -95,8 +95,7 @@ const quickServices: QuickService[] = [
   { id: 'services', label: 'UniraServicios', icon: Wrench, color: '#EC4899', action: 'services' },
   { id: 'wallet', label: 'UniraPay', icon: Wallet, color: '#22C55E', action: 'wallet' },
   { id: 'chat', label: 'UniraChat', icon: MessageCircle, color: '#8B5CF6', action: 'chat' },
-  { id: 'help', label: 'UniraHelp', icon: Headphones,
-  Wrench, color: '#6B7280', action: 'help' },
+  { id: 'help', label: 'UniraHelp', icon: Headphones, color: '#6B7280', action: 'help' },
   { id: 'admin', label: 'UniraAdmin', icon: Shield, color: '#374151', action: 'admin' },
 ];
 

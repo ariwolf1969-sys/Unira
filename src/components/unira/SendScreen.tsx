@@ -203,17 +203,32 @@ export function SendScreen() {
     [store]
   );
 
+  // Geolocation
+  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [isLocating, setIsLocating] = useState(false);
+
+  useEffect(() => {
+    if (!navigator.geolocation) { setUserLocation({ lat: -34.6037, lng: -58.3816 }); return; }
+    setIsLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => { setUserLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude }); setIsLocating(false); },
+      () => { setUserLocation({ lat: -34.6037, lng: -58.3816 }); setIsLocating(false); },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
+    );
+  }, []);
+
   const applyCurrentLocation = useCallback(() => {
+    const loc = userLocation || { lat: -34.6037, lng: -58.3816 };
     const current: Place = {
       name: 'Mi ubicación',
-      address: 'Buenos Aires, CABA',
-      lat: -34.6037,
-      lng: -58.3816,
+      address: userLocation ? ` (${loc.lat.toFixed(4)}, ${loc.lng.toFixed(4)})` : 'Buenos Aires, CABA',
+      lat: loc.lat,
+      lng: loc.lng,
     };
     setLocalOrigin(current);
     setOriginText('Mi ubicación');
     store.setOrigin(current);
-  }, [store]);
+  }, [userLocation, store]);
 
   // ─── Calculate quote ──────────────────────────────────────────────────
 
@@ -262,10 +277,12 @@ export function SendScreen() {
     }
   }, [step, sendDuration]);
 
-  // ─── Save trip to history on delivery ─────────────────────────────────
+  // Save trip to history on delivery (dedup guard)
+  const deliverySavedRef = useRef(false);
 
   useEffect(() => {
-    if (isDelivered && localOrigin && localDest) {
+    if (isDelivered && localOrigin && localDest && !deliverySavedRef.current) {
+      deliverySavedRef.current = true;
       const trip: Trip = {
         id: generateId(),
         type: 'send',
@@ -290,7 +307,7 @@ export function SendScreen() {
         balance: store.walletBalance - sendFare,
       });
     }
-  }, [isDelivered]);
+  }, [isDelivered]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ─── Handlers ─────────────────────────────────────────────────────────
 

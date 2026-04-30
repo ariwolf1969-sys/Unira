@@ -74,12 +74,10 @@ export default function HomePage() {
         return <ChatScreen />;
       case 'admin':
         return <AdminScreen />;
-      case 'food-restaurant':
+      case 'food-restaurant': return <FoodScreen />;
       case 'services': return <ServicesScreen />;
-        case 'referral': return <ReferralScreen />;
-        case 'communities':
-        return <CommunitiesScreen />;
-        return <FoodScreen />;
+      case 'referral': return <ReferralScreen />;
+      case 'communities': return <CommunitiesScreen />;
       default:
         return null;
     }
