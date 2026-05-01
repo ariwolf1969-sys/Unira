@@ -138,44 +138,79 @@ export function RideScreen() {
   // Geolocation
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [isLocating, setIsLocating] = useState(false);
+  const [gpsAddress, setGpsAddress] = useState<string>('');
+  const watchIdRef = useRef<number | null>(null);
 
   // Map selection mode
   const [selectMode, setSelectMode] = useState<'origin' | 'destination' | null>(null);
 
   // Multiple waypoints
   const [waypoints, setWaypoints] = useState<Place[]>([]);
+  const [isAddingWaypoint, setIsAddingWaypoint] = useState(false);
+  const [newWaypointText, setNewWaypointText] = useState('');
+  const [newWaypointSuggestions, setNewWaypointSuggestions] = useState<NominatimResult[]>([]);
+  const [showNewWaypointSuggestions, setShowNewWaypointSuggestions] = useState(false);
 
   const originTimerRef = useRef<NodeJS.Timeout | null>(null);
   const destTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const waypointTimerRef = useRef<NodeJS.Timeout | null>(null);
   const progressRef = useRef<NodeJS.Timeout | null>(null);
   const tripCompletedRef = useRef(false);
 
-  // ─── Get real geolocation ───────────────────────────────────────────
+  // ─── Get real geolocation with watchPosition ──────────────────────
 
   const getUserLocation = useCallback(() => {
     if (!navigator.geolocation) {
       setUserLocation({ lat: DEFAULT_LOCATION.lat, lng: DEFAULT_LOCATION.lng });
+      setGpsAddress('GPS no disponible - usando Buenos Aires');
       return;
     }
     setIsLocating(true);
-    navigator.geolocation.getCurrentPosition(
+
+    // Clear previous watch if any
+    if (watchIdRef.current !== null) {
+      navigator.geolocation.clearWatch(watchIdRef.current);
+    }
+
+    watchIdRef.current = navigator.geolocation.watchPosition(
       (position) => {
-        const { latitude, longitude } = position.coords;
+        const { latitude, longitude, accuracy } = position.coords;
         setUserLocation({ lat: latitude, lng: longitude });
         setIsLocating(false);
+        // Reverse geocode to show address
+        reverseGeocode(latitude, longitude).then(addr => {
+          setGpsAddress(addr + (accuracy ? ` (~${Math.round(accuracy)}m)` : ''));
+        });
       },
       (error) => {
         console.warn('Geolocation error:', error.message);
-        setUserLocation({ lat: DEFAULT_LOCATION.lat, lng: DEFAULT_LOCATION.lng });
         setIsLocating(false);
+        // Fallback: try getCurrentPosition with lower accuracy
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            const { latitude, longitude } = position.coords;
+            setUserLocation({ lat: latitude, lng: longitude });
+            reverseGeocode(latitude, longitude).then(addr => setGpsAddress(addr + ' (aproximado)'));
+          },
+          () => {
+            setUserLocation({ lat: DEFAULT_LOCATION.lat, lng: DEFAULT_LOCATION.lng });
+            setGpsAddress('No se pudo obtener ubicación');
+          },
+          { enableHighAccuracy: false, timeout: 15000, maximumAge: 300000 }
+        );
       },
-      { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
+      { enableHighAccuracy: true, timeout: 20000, maximumAge: 60000 }
     );
-  }, []);
+  }, []); // reverseGeocode is stable, no need to re-create
 
-  // Get location on mount
+  // Get location on mount, cleanup on unmount
   useEffect(() => {
     getUserLocation();
+    return () => {
+      if (watchIdRef.current !== null) {
+        navigator.geolocation.clearWatch(watchIdRef.current);
+      }
+    };
   }, [getUserLocation]);
 
   // Sync store origin/destination on mount
@@ -321,45 +356,90 @@ export function RideScreen() {
     const loc = userLocation || DEFAULT_LOCATION;
     const place: Place = {
       name: 'Mi ubicación',
-      address: userLocation ? ` (${loc.lat.toFixed(4)}, ${loc.lng.toFixed(4)})` : 'Buenos Aires, CABA',
+      address: gpsAddress || (userLocation ? `${loc.lat.toFixed(4)}, ${loc.lng.toFixed(4)}` : 'Buenos Aires, CABA'),
       lat: loc.lat,
       lng: loc.lng,
     };
     setLocalOrigin(place);
     setOriginText('Mi ubicación');
     store.setOrigin(place);
-  }, [userLocation, store]);
+    // Show toast with detected address
+    if (gpsAddress) {
+      store.showToast(`Ubicación: ${gpsAddress.split(',')[0]}`, 'success');
+    } else if (isLocating) {
+      store.showToast('Detectando ubicación...', 'info');
+    } else if (!userLocation) {
+      store.showToast('No se pudo detectar tu ubicación', 'error');
+    }
+  }, [userLocation, gpsAddress, isLocating, store]);
 
   // ─── Add waypoint (multiple destinations) ────────────────────────────
+  // Keeps final destination intact, adds new intermediate stop input
 
   const addWaypoint = useCallback(() => {
-    if (!localDest) return;
-    // Current destination becomes the last waypoint, clear destination for new one
-    setWaypoints(prev => [...prev, localDest]);
-    setLocalDest(null);
-    setDestText('');
-    store.setDestination(null);
-  }, [localDest, store]);
+    if (waypoints.length >= 4) return;
+    setIsAddingWaypoint(true);
+    setNewWaypointText('');
+    setNewWaypointSuggestions([]);
+  }, [waypoints.length]);
+
+  const handleNewWaypointChange = useCallback((value: string) => {
+    setNewWaypointText(value);
+    if (waypointTimerRef.current) clearTimeout(waypointTimerRef.current);
+    if (value.length < 3) {
+      setNewWaypointSuggestions([]);
+      setShowNewWaypointSuggestions(false);
+      return;
+    }
+    waypointTimerRef.current = setTimeout(async () => {
+      const results = await searchNominatim(value);
+      setNewWaypointSuggestions(results);
+      setShowNewWaypointSuggestions(results.length > 0);
+    }, 400);
+  }, [searchNominatim]);
+
+  const selectNewWaypoint = useCallback((result: NominatimResult) => {
+    const parts = result.display_name.split(' - ');
+    const place: Place = {
+      name: parts[0].split(',')[0].trim(),
+      address: parts[1]?.trim() || result.display_name.split(',').slice(1, 3).join(',').trim(),
+      lat: parseFloat(result.lat),
+      lng: parseFloat(result.lon),
+    };
+    setWaypoints(prev => [...prev, place]);
+    setIsAddingWaypoint(false);
+    setNewWaypointText('');
+    setNewWaypointSuggestions([]);
+    setShowNewWaypointSuggestions(false);
+    store.showToast(`Parada agregada: ${place.name}`, 'success');
+  }, [store]);
+
+  const cancelAddWaypoint = useCallback(() => {
+    setIsAddingWaypoint(false);
+    setNewWaypointText('');
+    setNewWaypointSuggestions([]);
+    setShowNewWaypointSuggestions(false);
+  }, []);
 
   const removeWaypoint = useCallback((index: number) => {
     setWaypoints(prev => prev.filter((_, i) => i !== index));
   }, []);
 
   // ─── Calculate fare and trip details (with waypoints) ────────────────
+  // Route: origin → waypoint1 → waypoint2 → ... → destination
 
   useEffect(() => {
     if (localOrigin && localDest) {
-      let totalDist = haversineDistance(localOrigin.lat, localOrigin.lng, localDest.lat, localDest.lng);
+      let totalDist = 0;
       let prevPoint = localOrigin;
 
-      // Add waypoint distances
+      // Distance through waypoints in order
       for (const wp of waypoints) {
         totalDist += haversineDistance(prevPoint.lat, prevPoint.lng, wp.lat, wp.lng);
         prevPoint = wp;
       }
-      if (waypoints.length > 0) {
-        totalDist += haversineDistance(prevPoint.lat, prevPoint.lng, localDest.lat, localDest.lng);
-      }
+      // Final leg to destination
+      totalDist += haversineDistance(prevPoint.lat, prevPoint.lng, localDest.lat, localDest.lng);
 
       const dur = Math.round((totalDist / 25) * 60);
       const fare = calculateFare(totalDist, dur, localVehicle);
@@ -529,6 +609,7 @@ export function RideScreen() {
     if (progressRef.current) clearInterval(progressRef.current);
     if (originTimerRef.current) clearTimeout(originTimerRef.current);
     if (destTimerRef.current) clearTimeout(destTimerRef.current);
+    if (waypointTimerRef.current) clearTimeout(waypointTimerRef.current);
     tripCompletedRef.current = false;
     setStep('input');
     setRating(0);
@@ -541,6 +622,8 @@ export function RideScreen() {
     setThirdPhone('');
     setWaypoints([]);
     setSelectMode(null);
+    setIsAddingWaypoint(false);
+    setNewWaypointText('');
     store.setTripVerificationCode(null);
     store.setOrigin(null);
     store.setDestination(null);
@@ -556,20 +639,26 @@ export function RideScreen() {
 
   const getVehicleFare = useCallback((vehicleId: string) => {
     if (!localOrigin || !localDest) return 0;
-    let dist = haversineDistance(localOrigin.lat, localOrigin.lng, localDest.lat, localDest.lng);
+    let dist = 0;
+    let prevPoint = localOrigin;
     for (const wp of waypoints) {
-      dist += haversineDistance(localOrigin.lat, localOrigin.lng, wp.lat, wp.lng);
+      dist += haversineDistance(prevPoint.lat, prevPoint.lng, wp.lat, wp.lng);
+      prevPoint = wp;
     }
+    dist += haversineDistance(prevPoint.lat, prevPoint.lng, localDest.lat, localDest.lng);
     const dur = Math.round((dist / 25) * 60);
     return calculateFare(dist, dur, vehicleId);
   }, [localOrigin, localDest, waypoints]);
 
   const getVehicleEta = useCallback((vehicleId: string) => {
     if (!localOrigin || !localDest) return 0;
-    let dist = haversineDistance(localOrigin.lat, localOrigin.lng, localDest.lat, localDest.lng);
+    let dist = 0;
+    let prevPoint = localOrigin;
     for (const wp of waypoints) {
-      dist += haversineDistance(localOrigin.lat, localOrigin.lng, wp.lat, wp.lng);
+      dist += haversineDistance(prevPoint.lat, prevPoint.lng, wp.lat, wp.lng);
+      prevPoint = wp;
     }
+    dist += haversineDistance(prevPoint.lat, prevPoint.lng, localDest.lat, localDest.lng);
     const vt = vehicleTypes.find(v => v.id === vehicleId);
     if (!vt) return 0;
     const speedMap: Record<string, number> = { moto: 35, auto: 25, auto_premium: 25, taxi: 28 };
@@ -727,8 +816,53 @@ export function RideScreen() {
                 )}
               </div>
 
+              {/* New waypoint input (appears when adding intermediate stop) */}
+              {isAddingWaypoint && (
+                <div className="relative mt-1">
+                  <div className="flex items-center gap-3">
+                    <div className="flex flex-col items-center gap-1 py-1">
+                      <div className="w-3 h-3 rounded-full bg-amber-500 shadow-sm shadow-amber-500/30 animate-pulse" />
+                      <div className="w-0.5 h-8 bg-gray-200" />
+                    </div>
+                    <input
+                      type="text"
+                      value={newWaypointText}
+                      onChange={(e) => handleNewWaypointChange(e.target.value)}
+                      onFocus={() => newWaypointSuggestions.length > 0 && setShowNewWaypointSuggestions(true)}
+                      onBlur={() => setTimeout(() => setShowNewWaypointSuggestions(false), 200)}
+                      placeholder="Parada intermedia..."
+                      className="flex-1 text-sm bg-amber-50 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-amber-400/30 placeholder:text-gray-400 text-gray-800"
+                      autoFocus
+                      aria-label="Parada intermedia"
+                    />
+                    <button
+                      onClick={cancelAddWaypoint}
+                      className="w-9 h-9 rounded-xl bg-gray-100 flex items-center justify-center hover:bg-gray-200 active:scale-95 transition-all flex-shrink-0"
+                      aria-label="Cancelar parada"
+                    >
+                      <X className="w-4 h-4 text-gray-500" />
+                    </button>
+                  </div>
+                  {/* Waypoint suggestions */}
+                  {showNewWaypointSuggestions && newWaypointSuggestions.length > 0 && (
+                    <div className="absolute top-full left-14 right-0 mt-1 bg-white rounded-xl shadow-xl border border-gray-100 z-30 max-h-48 overflow-y-auto hide-scrollbar">
+                      {newWaypointSuggestions.map((s) => (
+                        <button
+                          key={s.place_id}
+                          onMouseDown={() => selectNewWaypoint(s)}
+                          className="w-full text-left px-4 py-2.5 hover:bg-gray-50 flex items-start gap-2 transition-colors border-b border-gray-50 last:border-0"
+                        >
+                          <MapPin className="w-4 h-4 text-amber-500 mt-0.5 flex-shrink-0" />
+                          <span className="text-xs text-gray-700 leading-snug line-clamp-2">{s.display_name}</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
               {/* Add destination button */}
-              {localDest && waypoints.length < 4 && (
+              {localDest && waypoints.length < 4 && !isAddingWaypoint && (
                 <button
                   onClick={addWaypoint}
                   className="w-full mt-2 flex items-center gap-2 text-xs font-semibold text-[#0EA5A0] hover:text-[#0C8F8A] transition-colors py-1 px-2"
