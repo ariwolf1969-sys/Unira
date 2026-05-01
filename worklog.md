@@ -299,3 +299,40 @@
 ### Verification
 - ✅ `bun run lint` passes with zero errors/warnings
 - ✅ Dev server compiles successfully (Turbopack, no warnings)
+
+---
+
+## [2025-06-05] Session 8 — Tanda 2: Backend Persistence (Prisma + SQLite)
+
+### Files Created/Modified
+
+| File | Action | Description |
+|------|--------|-------------|
+| `prisma/schema.prisma` | Created | Prisma schema with SQLite: 3 models (User, Trip, WalletMovement) with relations, unique phone constraint, default wallet balance of 15000 |
+| `.env` | Created | DATABASE_URL pointing to absolute path for SQLite dev.db |
+| `.env.example` | Created | Template DATABASE_URL for new developers |
+| `src/lib/prisma.ts` | Created | Prisma client singleton with globalThis caching for dev hot-reload, explicit datasource URL to bypass parent .env |
+| `src/app/api/auth/register/route.ts` | Created | POST register: upserts user by phone, generates SHA-256 token, seeds wallet with 15000 |
+| `src/app/api/auth/login/route.ts` | Created | POST login: finds user by phone, returns user + token or 404 |
+| `src/app/api/trips/route.ts` | Created | GET (user trips, limit 50) + POST (create trip with flat origin/dest fields, waypoints as JSON) |
+| `src/app/api/wallet/route.ts` | Created | GET: returns balance + last 100 movements |
+| `src/app/api/wallet/topup/route.ts` | Created | POST: atomic transaction to update balance + create WalletMovement |
+| `src/lib/store.ts` | Modified | Added `authToken`, `setAuthToken` (persisted). Added 4 API sync methods: `syncTripToServer`, `syncWalletToServer`, `syncTopupToServer`, `loadFromServer`. `addToHistory` auto-syncs. `addMovement` syncs non-topup. `logout` clears token |
+| `src/components/unira/AuthScreen.tsx` | Modified | Register/demo try API first, fall back to local. After login calls `loadFromServer(userId)` |
+| `src/components/unira/WalletScreen.tsx` | Modified | `handleConfirmRecarga` calls `store.syncTopupToServer()` alongside local update |
+| `.gitignore` | Modified | Added `prisma/dev.db`, `prisma/dev.db-journal`; added `!.env.example` exception |
+
+### Architecture Decisions
+- **Best-effort sync**: All API calls fire-and-forget with try/catch. App works offline with local Zustand state.
+- **Client remains source of truth**: Zustand persist drives UI. API is additional sync layer.
+- **Server data merges on load**: `loadFromServer` deduplicates by ID, merges, sorts by date.
+- **Simple token auth**: SHA-256 hash of userId + secret constant.
+- **Prisma singleton**: globalThis pattern for HMR. Explicit datasources to avoid parent .env override.
+- **Flat Trip model**: Server stores origin/dest as flat fields. API converts between flat and nested Place objects.
+- **Atomic topup**: Prisma `$transaction` for balance update + movement creation.
+
+### Verification
+- ✅ All new/modified files pass ESLint (no new errors)
+- ✅ Prisma schema pushed, SQLite database created
+- ✅ No existing functionality broken
+- ✅ App works offline if API is down

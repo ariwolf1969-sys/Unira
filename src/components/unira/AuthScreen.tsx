@@ -15,7 +15,7 @@ export function AuthScreen() {
   const [regName, setRegName] = useState('');
   const [regPhone, setRegPhone] = useState('');
 
-  const { setUser, showToast } = useAppStore();
+  const { setUser, setAuthToken, loadFromServer, showToast } = useAppStore();
 
   const handleQuickRegister = async () => {
     setError('');
@@ -29,9 +29,28 @@ export function AuthScreen() {
     }
 
     setLoading(true);
-    await new Promise((r) => setTimeout(r, 600));
 
-    const newUser: User = {
+    // Try API register first
+    let apiUser: User | null = null;
+    let apiToken: string | null = null;
+
+    try {
+      const res = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: regName.trim(), phone: regPhone.trim() }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        apiUser = data.user;
+        apiToken = data.token;
+      }
+    } catch {
+      // API failed - fall back to local registration
+    }
+
+    // Use API user if available, otherwise create local user
+    const finalUser: User = apiUser || {
       uid: 'user-' + Date.now(),
       email: '',
       name: regName.trim(),
@@ -41,13 +60,41 @@ export function AuthScreen() {
       role: 'passenger',
       isDriverApproved: false,
     };
-    setUser(newUser);
+
+    setUser(finalUser);
+    if (apiToken) setAuthToken(apiToken);
+
     showToast(`¡Bienvenido/a, ${regName.trim()}!`, 'success');
+
+    // Load previous data from server
+    if (finalUser.uid) {
+      loadFromServer(finalUser.uid);
+    }
+
     setLoading(false);
   };
 
-  const handleDemo = () => {
-    const demoUser: User = {
+  const handleDemo = async () => {
+    // Try API register first
+    let apiUser: User | null = null;
+    let apiToken: string | null = null;
+
+    try {
+      const res = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: 'Usuario Demo', phone: '+54 11 5555-0000' }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        apiUser = data.user;
+        apiToken = data.token;
+      }
+    } catch {
+      // API failed - fall back to local
+    }
+
+    const demoUser: User = apiUser || {
       uid: 'demo',
       email: 'demo@unira.app',
       name: 'Usuario Demo',
@@ -57,8 +104,15 @@ export function AuthScreen() {
       role: 'passenger',
       isDriverApproved: true,
     };
+
     setUser(demoUser);
+    if (apiToken) setAuthToken(apiToken);
     showToast('Modo demo activado', 'info');
+
+    // Load previous data from server
+    if (demoUser.uid) {
+      loadFromServer(demoUser.uid);
+    }
   };
 
   return (

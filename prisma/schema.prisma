@@ -1,0 +1,64 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id              String           @id @default(cuid())
+  name            String
+  phone           String           @unique
+  email           String?          @default("")
+  dni             String?          @default("")
+  avatar          String?          @default("")
+  role            String           @default("passenger")
+  isDriverApproved Boolean          @default(false)
+  walletBalance   Int              @default(15000)
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  trips           Trip[]
+  walletMovements WalletMovement[]
+}
+
+model Trip {
+  id            String   @id @default(cuid())
+  userId        String
+  type          String   @default("ride")
+  status        String   @default("completed")
+  originName    String
+  originAddress String
+  originLat     Float
+  originLng     Float
+  destName      String
+  destAddress   String
+  destLat       Float
+  destLng       Float
+  fare          Int
+  vehicleType   String?  @default("auto")
+  driverId      String?
+  driverName    String?
+  driverPhoto   String?
+  driverVehicle String?
+  rating        Int?
+  thirdParty    String?
+  thirdPhone    String?
+  distance      Float?
+  duration      Int?
+  waypoints     String?
+  createdAt     DateTime @default(now())
+  user          User     @relation(fields: [userId], references: [id])
+}
+
+model WalletMovement {
+  id          String   @id @default(cuid())
+  userId      String
+  type        String
+  amount      Int
+  description String
+  balance     Int
+  createdAt   DateTime @default(now())
+  user        User     @relation(fields: [userId], references: [id])
+}

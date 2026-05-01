@@ -125,14 +125,19 @@ export function WalletScreen() {
     if (isNaN(amount) || amount <= 0) return;
 
     const newBalance = store.walletBalance + amount;
+    const description = `Recarga con tarjeta Visa ****${Math.floor(1000 + Math.random() * 9000)}`;
+
     store.addMovement({
       id: generateId(),
       type: 'topup',
       amount,
-      description: `Recarga con tarjeta Visa ****${Math.floor(1000 + Math.random() * 9000)}`,
+      description,
       date: new Date().toISOString(),
       balance: newBalance,
     });
+
+    // Sync topup to server
+    store.syncTopupToServer(amount, description);
 
     store.showToast(`¡Recarga exitosa! +${formatCurrency(amount)}`, 'success');
     setShowRecargarModal(false);

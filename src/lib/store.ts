@@ -115,6 +115,8 @@ interface AppStore {
   // Auth
   user: User | null;
   setUser: (user: User | null) => void;
+  authToken: string | null;
+  setAuthToken: (token: string | null) => void;
   isFirebaseReady: boolean;
   setIsFirebaseReady: (v: boolean) => void;
   isHydrated: boolean;
@@ -185,6 +187,12 @@ interface AppStore {
   likePost: (id: string) => void;
   addComment: (pid: string, content: string, author: string, init: string) => void;
   likeComment: (id: string) => void;
+
+  // API Sync
+  syncTripToServer: (trip: Trip) => Promise<void>;
+  syncWalletToServer: () => Promise<void>;
+  syncTopupToServer: (amount: number, description: string) => Promise<void>;
+  loadFromServer: (userId: string) => Promise<void>;
 
   // Persist helpers
   logout: () => void;
@@ -282,6 +290,8 @@ export const useAppStore = create<AppStore>()(
       // Auth
       user: null,
       setUser: (user) => set({ user }),
+      authToken: null,
+      setAuthToken: (token) => set({ authToken: token }),
       isFirebaseReady: false,
       setIsFirebaseReady: (v) => set({ isFirebaseReady: v }),
       isHydrated: false,
@@ -307,8 +317,11 @@ export const useAppStore = create<AppStore>()(
       currentTrip: null,
       setCurrentTrip: (t) => set({ currentTrip: t }),
       tripHistory: [],
-      addToHistory: (t) =>
-        set((s) => ({ tripHistory: [t, ...s.tripHistory].slice(0, 50) })), // Keep max 50 trips
+      addToHistory: (t) => {
+        set((s) => ({ tripHistory: [t, ...s.tripHistory].slice(0, 50) })); // Keep max 50 trips
+        // Sync to server (fire-and-forget)
+        get().syncTripToServer(t);
+      },
       tripVerificationCode: null,
       setTripVerificationCode: (code) => set({ tripVerificationCode: code }),
 
@@ -316,11 +329,16 @@ export const useAppStore = create<AppStore>()(
       walletBalance: 15000,
       setWalletBalance: (b) => set({ walletBalance: b }),
       walletMovements: [],
-      addMovement: (m) =>
+      addMovement: (m) => {
         set((s) => ({
           walletMovements: [m, ...s.walletMovements].slice(0, 100), // Keep max 100 movements
           walletBalance: s.walletBalance + m.amount,
-        })),
+        }));
+        // Sync wallet state to server (fire-and-forget) for non-topup movements
+        if (m.type !== 'topup') {
+          get().syncWalletToServer();
+        }
+      },
 
       // Food (cart persisted)
       cart: [],
@@ -407,10 +425,89 @@ export const useAppStore = create<AppStore>()(
         comments: s.comments.map(c => c.id === id ? { ...c, isLiked: !c.isLiked, likes: c.isLiked ? c.likes - 1 : c.likes + 1 } : c)
       })),
 
+      // ─── API Sync Methods ──────────────────────────────────────────
+
+      syncTripToServer: async (trip: Trip) => {
+        const { user } = get();
+        if (!user) return;
+        try {
+          await fetch('/api/trips', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userId: user.uid, trip }),
+          });
+        } catch {
+          // Silent fallback - local state is already updated
+        }
+      },
+
+      syncWalletToServer: async () => {
+        // This syncs wallet balance and movements by just updating the user's balance
+        // Individual movements are synced via syncTopupToServer or trip completion
+        // This is a no-op for now since the balance is maintained locally
+      },
+
+      syncTopupToServer: async (amount: number, description: string) => {
+        const { user } = get();
+        if (!user) return;
+        try {
+          await fetch('/api/wallet/topup', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userId: user.uid, amount, description }),
+          });
+        } catch {
+          // Silent fallback - local state is already updated
+        }
+      },
+
+      loadFromServer: async (userId: string) => {
+        try {
+          // Fetch trips from server
+          const tripsRes = await fetch(`/api/trips?userId=${userId}`);
+          if (tripsRes.ok) {
+            const { trips } = await tripsRes.json() as { trips: Trip[] };
+            if (trips && trips.length > 0) {
+              set((s) => {
+                // Merge server trips with local trips, dedup by id
+                const localIds = new Set(s.tripHistory.map(t => t.id));
+                const newTrips = trips.filter(t => !localIds.has(t.id));
+                const merged = [...trips, ...newTrips]
+                  .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+                  .slice(0, 50);
+                return { tripHistory: merged };
+              });
+            }
+          }
+
+          // Fetch wallet from server
+          const walletRes = await fetch(`/api/wallet?userId=${userId}`);
+          if (walletRes.ok) {
+            const { balance, movements } = await walletRes.json() as { balance: number; movements: WalletMovement[] };
+            if (movements && movements.length > 0) {
+              set((s) => {
+                const localIds = new Set(s.walletMovements.map(m => m.id));
+                const newMovements = movements.filter(m => !localIds.has(m.id));
+                const merged = [...movements, ...newMovements]
+                  .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+                  .slice(0, 100);
+                // Use server balance only if there are server movements
+                return { walletMovements: merged, walletBalance: balance ?? s.walletBalance };
+              });
+            } else if (balance !== undefined) {
+              set({ walletBalance: balance });
+            }
+          }
+        } catch {
+          // Silent fallback - keep local state
+        }
+      },
+
       // Logout
       logout: () => {
         set({
           user: null,
+          authToken: null,
           currentScreen: 'auth',
           previousScreen: '',
           origin: null,
@@ -430,6 +527,7 @@ export const useAppStore = create<AppStore>()(
       // Only persist these keys (transient UI state is NOT persisted)
       partialize: (state) => ({
         user: state.user,
+        authToken: state.authToken,
         tripHistory: state.tripHistory,
         walletBalance: state.walletBalance,
         walletMovements: state.walletMovements,
