@@ -121,6 +121,16 @@ interface AppStore {
   setIsFirebaseReady: (v: boolean) => void;
   isHydrated: boolean;
 
+  // Lock screen
+  isLocked: boolean;
+  setIsLocked: (v: boolean) => void;
+  pinHash: string | null;
+  setPinHash: (hash: string | null) => void;
+  biometricEnabled: boolean;
+  setBiometricEnabled: (v: boolean) => void;
+  biometricCredentialId: string | null;
+  setBiometricCredentialId: (id: string | null) => void;
+
   // Navigation
   currentScreen: string;
   setCurrentScreen: (screen: string) => void;
@@ -295,6 +305,16 @@ export const useAppStore = create<AppStore>()(
       isFirebaseReady: false,
       setIsFirebaseReady: (v) => set({ isFirebaseReady: v }),
       isHydrated: false,
+
+      // Lock screen (isLocked not persisted - always starts locked)
+      isLocked: true,
+      setIsLocked: (v) => set({ isLocked: v }),
+      pinHash: null,
+      setPinHash: (hash) => set({ pinHash: hash }),
+      biometricEnabled: false,
+      setBiometricEnabled: (v) => set({ biometricEnabled: v }),
+      biometricCredentialId: null,
+      setBiometricCredentialId: (id) => set({ biometricCredentialId: id }),
 
       // Navigation (not persisted - always starts at home)
       currentScreen: 'home',
@@ -515,6 +535,7 @@ export const useAppStore = create<AppStore>()(
           currentTrip: null,
           tripVerificationCode: null,
           isOnline: false,
+          isLocked: true,
           chatMessages: [],
           isLoading: false,
           toastMessage: '',
@@ -537,6 +558,9 @@ export const useAppStore = create<AppStore>()(
         joinedCommunities: state.joinedCommunities,
         communityPosts: state.communityPosts,
         comments: state.comments,
+        pinHash: state.pinHash,
+        biometricEnabled: state.biometricEnabled,
+        biometricCredentialId: state.biometricCredentialId,
       }),
       // Custom storage with Date-aware JSON parsing (SSR safe)
       storage: typeof window !== 'undefined' ? {

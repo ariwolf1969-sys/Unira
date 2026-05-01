@@ -4,6 +4,7 @@ import { useEffect, useCallback, useSyncExternalStore } from 'react';
 import { useAppStore } from '@/lib/store';
 import { SplashScreen } from '@/components/unira/SplashScreen';
 import { AuthScreen } from '@/components/unira/AuthScreen';
+import { LockScreen } from '@/components/unira/LockScreen';
 import { RoleScreen } from '@/components/unira/RoleScreen';
 import { HomeScreen } from '@/components/unira/HomeScreen';
 import { RideScreen } from '@/components/unira/RideScreen';
@@ -23,7 +24,7 @@ import { ReferralScreen } from '@/components/unira/ReferralScreen';
 import { ServicesScreen } from '@/components/unira/ServicesScreen';
 
 export default function HomePage() {
-  const { currentScreen, user, isHydrated, toastMessage, toastType, showToast, setCurrentScreen } = useAppStore();
+  const { currentScreen, user, isHydrated, isLocked, toastMessage, toastType, showToast, setCurrentScreen } = useAppStore();
 
   const emptySubscribe = () => () => {};
   const mounted = useSyncExternalStore(emptySubscribe, () => true, () => false);
@@ -91,6 +92,17 @@ export default function HomePage() {
 
   // Wait for hydration to avoid flash of wrong screen
   if (!mounted || !isHydrated) return null;
+
+  // Lock screen takes priority when user is logged in and locked
+  if (isLocked && user) {
+    return (
+      <div suppressHydrationWarning className="mobile-app relative">
+        <div className="screen-slide-in">
+          <LockScreen />
+        </div>
+      </div>
+    );
+  }
 
   const toastIcon = {
     success: <CheckCircle className="w-5 h-5 text-emerald-400" />,
