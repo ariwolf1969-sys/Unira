@@ -303,7 +303,7 @@ export function SendScreen() {
         type: 'send',
         amount: -sendFare,
         description: `Envío ${PACKAGE_SIZES.find((s) => s.id === selectedSize)?.name || ''} - ${localOrigin.name} → ${localDest.name}`,
-        date: new Date(),
+        date: new Date().toISOString(),
         balance: store.walletBalance - sendFare,
       });
     }

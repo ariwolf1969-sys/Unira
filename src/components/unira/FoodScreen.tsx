@@ -213,7 +213,7 @@ export function FoodScreen() {
       type: 'food',
       amount: -total,
       description: `${selectedRestaurant.name} - Delivery`,
-      date: new Date(),
+      date: new Date().toISOString(),
       balance: store.walletBalance - total,
     });
 

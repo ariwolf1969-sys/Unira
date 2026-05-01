@@ -600,7 +600,7 @@ export function RideScreen() {
         distance: tripDistance,
         duration: tripDuration,
         waypoints: waypoints.length > 0 ? waypoints : undefined,
-        createdAt: new Date(),
+        createdAt: new Date().toISOString(),
       };
 
       store.addToHistory(trip);
@@ -611,7 +611,7 @@ export function RideScreen() {
           type: 'ride',
           amount: -fareBreakdown.total,
           description: `Viaje ${vehicleTypes.find(v => v.id === localVehicle)?.name || 'Unira'} - ${localOrigin.name} → ${localDest.name}${waypoints.length > 0 ? ` (+${waypoints.length} paradas)` : ''}`,
-          date: new Date(),
+          date: new Date().toISOString(),
           balance: store.walletBalance - fareBreakdown.total,
         });
       }
@@ -622,7 +622,7 @@ export function RideScreen() {
           type: 'tip',
           amount: -tip,
           description: `Propina para ${driver.name}`,
-          date: new Date(),
+          date: new Date().toISOString(),
           balance: store.walletBalance - fareBreakdown.total - tip,
         });
       }

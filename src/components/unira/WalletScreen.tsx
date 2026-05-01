@@ -130,7 +130,7 @@ export function WalletScreen() {
       type: 'topup',
       amount,
       description: `Recarga con tarjeta Visa ****${Math.floor(1000 + Math.random() * 9000)}`,
-      date: new Date(),
+      date: new Date().toISOString(),
       balance: newBalance,
     });
 

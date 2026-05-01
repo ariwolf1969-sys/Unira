@@ -33,9 +33,10 @@ export function calculateFare(distanceKm: number, durationMin: number, vehicleTy
   return Math.round(calculated / 10) * 10; // round to nearest 10
 }
 
-export function timeAgo(date: Date): string {
+export function timeAgo(date: Date | string): string {
+  const d = new Date(date);
   const now = Date.now();
-  const diff = now - date.getTime();
+  const diff = now - d.getTime();
   const seconds = Math.floor(diff / 1000);
   const minutes = Math.floor(seconds / 60);
   const hours = Math.floor(minutes / 60);

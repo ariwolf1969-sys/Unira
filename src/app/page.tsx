@@ -3,7 +3,6 @@
 import { useEffect, useCallback, useSyncExternalStore } from 'react';
 import { useAppStore } from '@/lib/store';
 import { SplashScreen } from '@/components/unira/SplashScreen';
-import { SetupScreen } from '@/components/unira/SetupScreen';
 import { AuthScreen } from '@/components/unira/AuthScreen';
 import { RoleScreen } from '@/components/unira/RoleScreen';
 import { HomeScreen } from '@/components/unira/HomeScreen';
@@ -20,18 +19,14 @@ import { NotificationsScreen } from '@/components/unira/NotificationsScreen';
 import { AdminScreen } from '@/components/unira/AdminScreen';
 import { DriverScreen } from '@/components/unira/DriverScreen';
 import { CommunitiesScreen } from '@/components/unira/CommunitiesScreen';
-import { ReferralScreen } from '@/components/unira/ReferralScreen'
+import { ReferralScreen } from '@/components/unira/ReferralScreen';
 import { ServicesScreen } from '@/components/unira/ServicesScreen';
 
-
-
 export default function HomePage() {
-  const { currentScreen, user, isFirebaseReady, toastMessage, toastType, showToast } = useAppStore();
+  const { currentScreen, user, isHydrated, toastMessage, toastType, showToast, setCurrentScreen } = useAppStore();
 
   const emptySubscribe = () => () => {};
   const mounted = useSyncExternalStore(emptySubscribe, () => true, () => false);
-
-// Demo mode: skip Firebase config check
 
   // Auto-dismiss toast
   useEffect(() => {
@@ -42,12 +37,20 @@ export default function HomePage() {
     return () => clearTimeout(timer);
   }, [toastMessage, showToast]);
 
+  // Auto-navigate: if user exists after hydration, go to home; if not, go to auth
+  useEffect(() => {
+    if (!isHydrated) return;
+    if (user && (currentScreen === 'auth' || currentScreen === 'splash' || currentScreen === 'setup')) {
+      setCurrentScreen('home');
+    } else if (!user && currentScreen !== 'auth') {
+      setCurrentScreen('auth');
+    }
+  }, [isHydrated, user, currentScreen, setCurrentScreen]);
+
   const renderScreen = useCallback(() => {
     switch (currentScreen) {
       case 'splash':
         return <SplashScreen />;
-      case 'setup':
-        return <SetupScreen />;
       case 'auth':
         return <AuthScreen />;
       case 'role':
@@ -84,11 +87,10 @@ export default function HomePage() {
   }, [currentScreen]);
 
   // Determine if this screen should have dark auth-style background
-  const isDarkScreen = ['splash', 'setup', 'auth', 'role'].includes(currentScreen);
+  const isDarkScreen = ['splash', 'auth', 'role'].includes(currentScreen);
 
-// Demo mode: user is pre-loaded, skip splash
-
-  if (!mounted) return null;
+  // Wait for hydration to avoid flash of wrong screen
+  if (!mounted || !isHydrated) return null;
 
   const toastIcon = {
     success: <CheckCircle className="w-5 h-5 text-emerald-400" />,
@@ -123,7 +125,7 @@ export default function HomePage() {
       <BottomNav />
 
       {/* Emergency stop button (always visible) */}
-      {user && !['splash', 'setup', 'auth', 'role'].includes(currentScreen) && (
+      {user && !['splash', 'auth', 'role'].includes(currentScreen) && (
         <div className="fixed bottom-20 right-4 z-40 max-w-[430px]">
           <button
             onClick={() => {

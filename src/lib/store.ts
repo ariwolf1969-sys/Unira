@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { persist, createJSONStorage } from 'zustand/middleware';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -31,7 +32,7 @@ export interface Trip {
   distance?: number;
   duration?: number;
   waypoints?: Place[];
-  createdAt: Date;
+  createdAt: string; // ISO string for JSON serialization
 }
 
 export interface Place {
@@ -46,7 +47,7 @@ export interface WalletMovement {
   type: 'topup' | 'ride' | 'food' | 'send' | 'tip' | 'cashback';
   amount: number;
   description: string;
-  date: Date;
+  date: string; // ISO string for JSON serialization
   balance: number;
 }
 
@@ -83,7 +84,7 @@ export interface Notification {
   body: string;
   type: 'trip' | 'promo' | 'payment' | 'system';
   read: boolean;
-  date: Date;
+  date: string; // ISO string
 }
 
 export interface ChatMessage {
@@ -100,12 +101,10 @@ export interface Community {
 export interface CommunityPost {
   id: string; communityId: string; authorName: string; authorInitial: string;
   content: string; likes: number; comments: number; isLiked: boolean;
-  tags?: string[]; createdAt: Date;
+  tags?: string[]; createdAt: string;
 }
 
-
 // ─── Store Interface ─────────────────────────────────────────────────────────
-
 
 export interface Comment {
   id: string; postId: string; authorName: string; authorInitial: string;
@@ -118,6 +117,7 @@ interface AppStore {
   setUser: (user: User | null) => void;
   isFirebaseReady: boolean;
   setIsFirebaseReady: (v: boolean) => void;
+  isHydrated: boolean;
 
   // Navigation
   currentScreen: string;
@@ -169,6 +169,11 @@ interface AppStore {
   setIsOnline: (v: boolean) => void;
 
   // UI
+  isLoading: boolean;
+  setLoading: (v: boolean) => void;
+  toastMessage: string;
+  toastType: 'success' | 'error' | 'info';
+  showToast: (msg: string, type: 'success' | 'error' | 'info') => void;
 
   // Communities
   joinedCommunities: string[];
@@ -180,191 +185,12 @@ interface AppStore {
   likePost: (id: string) => void;
   addComment: (pid: string, content: string, author: string, init: string) => void;
   likeComment: (id: string) => void;
-  isLoading: boolean;
-  setLoading: (v: boolean) => void;
-  toastMessage: string;
-  toastType: 'success' | 'error' | 'info';
-  showToast: (msg: string, type: 'success' | 'error' | 'info') => void;
+
+  // Persist helpers
+  logout: () => void;
 }
 
-// ─── Sample Data ─────────────────────────────────────────────────────────────
-
-const now = new Date();
-const sampleTripHistory: Trip[] = [
-  {
-    id: 'trip-001',
-    type: 'ride',
-    status: 'completed',
-    origin: { name: 'Obelisco', address: 'Av. 9 de Julio, C1073 CABA', lat: -34.6037, lng: -58.3816 },
-    destination: { name: 'Puerto Madero', address: 'Av. Alicia Moreau de Justo, C1107 CABA', lat: -34.6172, lng: -58.3639 },
-    fare: 1850,
-    vehicleType: 'auto',
-    driverId: 'drv-101',
-    driverName: 'Marcelo Gómez',
-    driverPhoto: '',
-    driverVehicle: 'Toyota Corolla - Negro',
-    rating: 5,
-    distance: 3.2,
-    duration: 12,
-    createdAt: new Date(now.getTime() - 2 * 60 * 60 * 1000),
-  },
-  {
-    id: 'trip-002',
-    type: 'food',
-    status: 'completed',
-    origin: { name: 'Parrilla La Porteña', address: 'Av. Corrientes 4500, C1414 CABA', lat: -34.6030, lng: -58.4400 },
-    destination: { name: 'Palermo Soho', address: 'Av. Coronel Díaz, C1425 CABA', lat: -34.5873, lng: -58.4166 },
-    fare: 6800,
-    vehicleType: 'moto',
-    driverId: 'drv-205',
-    driverName: 'Lucía Pérez',
-    driverPhoto: '',
-    driverVehicle: 'Honda Wave - Rojo',
-    rating: 4,
-    distance: 2.8,
-    duration: 18,
-    createdAt: new Date(now.getTime() - 24 * 60 * 60 * 1000),
-  },
-  {
-    id: 'trip-003',
-    type: 'ride',
-    status: 'completed',
-    origin: { name: 'Recoleta Cemetery', address: 'Junín 1760, C1026 CABA', lat: -34.5844, lng: -58.3923 },
-    destination: { name: 'Teatro Colón', address: 'Tucumán 1171, C1049 CABA', lat: -34.5997, lng: -58.3734 },
-    fare: 1200,
-    vehicleType: 'moto',
-    driverId: 'drv-312',
-    driverName: 'Juan Martínez',
-    driverPhoto: '',
-    driverVehicle: 'Yamaha Factor - Azul',
-    rating: 5,
-    distance: 2.1,
-    duration: 9,
-    createdAt: new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000),
-  },
-  {
-    id: 'trip-004',
-    type: 'ride',
-    status: 'completed',
-    origin: { name: 'Caminito', address: 'Caminito, La Boca, C1161 CABA', lat: -34.6345, lng: -58.3631 },
-    destination: { name: 'San Telmo Market', address: 'Defensa 1094, C1065 CABA', lat: -34.6216, lng: -58.3744 },
-    fare: 950,
-    vehicleType: 'moto',
-    driverId: 'drv-178',
-    driverName: 'Sofía Rodríguez',
-    driverPhoto: '',
-    driverVehicle: 'Scooter eléctrico - Blanco',
-    rating: 5,
-    distance: 1.8,
-    duration: 8,
-    createdAt: new Date(now.getTime() - 5 * 24 * 60 * 60 * 1000),
-  },
-  {
-    id: 'trip-005',
-    type: 'send',
-    status: 'completed',
-    origin: { name: 'El Ateneo Grand Splendid', address: 'Av. Santa Fe 1860, C1123 CABA', lat: -34.6033, lng: -58.3918 },
-    destination: { name: 'Dot Baires Shopping', address: 'Av. Coronel Díaz 2811, C1425 CABA', lat: -34.5836, lng: -58.4142 },
-    fare: 1400,
-    vehicleType: 'moto',
-    driverId: 'drv-445',
-    driverName: 'Pedro Sánchez',
-    driverPhoto: '',
-    driverVehicle: 'Honda PCX - Gris',
-    rating: 4,
-    distance: 2.5,
-    duration: 15,
-    createdAt: new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000),
-  },
-];
-
-const sampleNotifications: Notification[] = [
-  {
-    id: 'notif-001',
-    title: '¡Viaje completado!',
-    body: 'Calificá tu último viaje con Marcelo Gómez',
-    type: 'trip',
-    read: false,
-    date: new Date(now.getTime() - 2 * 60 * 60 * 1000),
-  },
-  {
-    id: 'notif-002',
-    title: 'Promo exclusiva 🎉',
-    body: 'Usá el código FOOD50 y obtené 50% en tu próximo delivery',
-    type: 'promo',
-    read: false,
-    date: new Date(now.getTime() - 12 * 60 * 60 * 1000),
-  },
-  {
-    id: 'notif-003',
-    title: 'Saldo recargado',
-    body: 'Se acreditaron $5.000 en tu billetera Unira',
-    type: 'payment',
-    read: true,
-    date: new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000),
-  },
-  {
-    id: 'notif-004',
-    title: 'Actualización del sistema',
-    body: 'Mejoramos la búsqueda de conductores. Probá la nueva versión.',
-    type: 'system',
-    read: true,
-    date: new Date(now.getTime() - 5 * 24 * 60 * 60 * 1000),
-  },
-  {
-    id: 'notif-005',
-    title: 'Cashback recibido',
-    body: 'Ganaste $350 de cashback por tu compra en Green Life Bowls',
-    type: 'payment',
-    read: false,
-    date: new Date(now.getTime() - 24 * 60 * 60 * 1000),
-  },
-];
-
-const sampleWalletMovements: WalletMovement[] = [
-  {
-    id: 'wm-001',
-    type: 'topup',
-    amount: 5000,
-    description: 'Recarga con tarjeta Visa ****4242',
-    date: new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000),
-    balance: 15000,
-  },
-  {
-    id: 'wm-002',
-    type: 'ride',
-    amount: -1850,
-    description: 'Viaje UniraAuto - Obelisco → Puerto Madero',
-    date: new Date(now.getTime() - 2 * 60 * 60 * 1000),
-    balance: 10000,
-  },
-  {
-    id: 'wm-003',
-    type: 'food',
-    amount: -6800,
-    description: 'Parrilla La Porteña - Delivery',
-    date: new Date(now.getTime() - 24 * 60 * 60 * 1000),
-    balance: 11850,
-  },
-  {
-    id: 'wm-004',
-    type: 'tip',
-    amount: -200,
-    description: 'Propina para Lucía Pérez',
-    date: new Date(now.getTime() - 24 * 60 * 60 * 1000),
-    balance: 18650,
-  },
-  {
-    id: 'wm-005',
-    type: 'cashback',
-    amount: 350,
-    description: 'Cashback Green Life Bowls',
-    date: new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000),
-    balance: 18850,
-  },
-];
-
-// ─── Store ──────────────────────────────────────────────────────────────────
+// ─── Static Data ────────────────────────────────────────────────────────────
 
 export const sampleComments: Comment[] = [
   { id:'c1', postId:'1', authorName:'Juan P.', authorInitial:'JP', content:'Totalmente de acuerdo, De La Cruz esta como un demonio!', likes:5, isLiked:false, createdAt:'2025-04-21' },
@@ -372,7 +198,6 @@ export const sampleComments: Comment[] = [
   { id:'c3', postId:'3', authorName:'Pedro S.', authorInitial:'PS', content:'Yo aplique, ojala me llamen!', likes:2, isLiked:false, createdAt:'2025-04-21' },
   { id:'c4', postId:'5', authorName:'Lucia M.', authorInitial:'LM', content:'Mucho animo! Yo corro hace 1 ano y la maraton es increible', likes:8, isLiked:false, createdAt:'2025-04-21' }
 ];
-
 
 export interface Product { id:string; name:string; price:number; originalPrice:number; image:string; store:string; commission:number; category:string; rating:number; }
 export const productsData: Product[] = [
@@ -400,134 +225,267 @@ export const samplePosts: CommunityPost[] = [
   { id:'5', communityId:'deportes', authorName:'Ana S.', authorInitial:'AS', content:'Maraton de Buenos Aires inscriptos? Entreno hace 3 meses, primera vez corriendo 42k!', likes:31, comments:15, isLiked:false, tags:['Running','Maraton'], createdAt:"2025-04-21" }
 ];
 
-export const useAppStore = create<AppStore>((set, get) => ({
-  // Auth
-  user: {
-    uid: 'demo',
-    email: 'demo@unira.app',
-    name: 'Usuario Demo',
-    phone: '+54 11 5555-0000',
-    dni: '',
-    avatar: '',
-    role: 'passenger',
-    isDriverApproved: true,
-  },
-  setUser: (user) => set({ user }),
-  isFirebaseReady: false,
-  setIsFirebaseReady: (v) => set({ isFirebaseReady: v }),
+// ─── Sample Data (used only for new users) ──────────────────────────────────
 
-  // Navigation
-  currentScreen: 'home',
-  setCurrentScreen: (screen) => set({ currentScreen: screen }),
-  previousScreen: '',
-  navigateTo: (screen) => set((s) => ({ previousScreen: s.currentScreen, currentScreen: screen })),
-  goBack: () =>
-    set((s) => {
-      const prev = s.previousScreen || 'home';
-      return { currentScreen: prev, previousScreen: '' };
-    }),
+function generateSampleTrips(): Trip[] {
+  const now = new Date();
+  return [
+    {
+      id: 'trip-001', type: 'ride', status: 'completed',
+      origin: { name: 'Obelisco', address: 'Av. 9 de Julio, C1073 CABA', lat: -34.6037, lng: -58.3816 },
+      destination: { name: 'Puerto Madero', address: 'Av. Alicia Moreau de Justo, C1107 CABA', lat: -34.6172, lng: -58.3639 },
+      fare: 1850, vehicleType: 'auto', driverId: 'drv-101', driverName: 'Marcelo Gómez', driverPhoto: '', driverVehicle: 'Toyota Corolla - Negro', rating: 5, distance: 3.2, duration: 12,
+      createdAt: new Date(now.getTime() - 2 * 60 * 60 * 1000).toISOString(),
+    },
+    {
+      id: 'trip-002', type: 'food', status: 'completed',
+      origin: { name: 'Parrilla La Porteña', address: 'Av. Corrientes 4500, C1414 CABA', lat: -34.603, lng: -58.44 },
+      destination: { name: 'Palermo Soho', address: 'Av. Coronel Díaz, C1425 CABA', lat: -34.5873, lng: -58.4166 },
+      fare: 6800, vehicleType: 'moto', driverId: 'drv-205', driverName: 'Lucía Pérez', driverPhoto: '', driverVehicle: 'Honda Wave - Rojo', rating: 4, distance: 2.8, duration: 18,
+      createdAt: new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString(),
+    },
+    {
+      id: 'trip-003', type: 'ride', status: 'completed',
+      origin: { name: 'Recoleta Cemetery', address: 'Junín 1760, C1026 CABA', lat: -34.5844, lng: -58.3923 },
+      destination: { name: 'Teatro Colón', address: 'Tucumán 1171, C1049 CABA', lat: -34.5997, lng: -58.3734 },
+      fare: 1200, vehicleType: 'moto', driverId: 'drv-312', driverName: 'Juan Martínez', driverPhoto: '', driverVehicle: 'Yamaha Factor - Azul', rating: 5, distance: 2.1, duration: 9,
+      createdAt: new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+    },
+  ];
+}
 
-  // Ride
-  origin: null,
-  setOrigin: (p) => set({ origin: p }),
-  destination: null,
-  setDestination: (p) => set({ destination: p }),
-  selectedVehicle: 'auto',
-  setSelectedVehicle: (v) => set({ selectedVehicle: v }),
-  currentTrip: null,
-  setCurrentTrip: (t) => set({ currentTrip: t }),
-  tripHistory: sampleTripHistory,
-  addToHistory: (t) =>
-    set((s) => ({ tripHistory: [t, ...s.tripHistory] })),
-  tripVerificationCode: null,
-  setTripVerificationCode: (code) => set({ tripVerificationCode: code }),
+function generateSampleNotifications(): Notification[] {
+  const now = new Date();
+  return [
+    { id: 'notif-001', title: '¡Viaje completado!', body: 'Calificá tu último viaje con Marcelo Gómez', type: 'trip', read: false, date: new Date(now.getTime() - 2 * 60 * 60 * 1000).toISOString() },
+    { id: 'notif-002', title: 'Promo exclusiva', body: 'Usá el código FOOD50 y obtené 50% en tu próximo delivery', type: 'promo', read: false, date: new Date(now.getTime() - 12 * 60 * 60 * 1000).toISOString() },
+    { id: 'notif-003', title: 'Saldo recargado', body: 'Se acreditaron $5.000 en tu billetera Unira', type: 'payment', read: true, date: new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000).toISOString() },
+    { id: 'notif-005', title: 'Cashback recibido', body: 'Ganaste $350 de cashback por tu compra en Green Life Bowls', type: 'payment', read: false, date: new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString() },
+  ];
+}
 
-  // Wallet
-  walletBalance: 15000,
-  setWalletBalance: (b) => set({ walletBalance: b }),
-  walletMovements: sampleWalletMovements,
-  addMovement: (m) =>
-    set((s) => ({
-      walletMovements: [m, ...s.walletMovements],
-      walletBalance: s.walletBalance + m.amount,
-    })),
+function generateSampleWalletMovements(): WalletMovement[] {
+  const now = new Date();
+  return [
+    { id: 'wm-001', type: 'topup', amount: 5000, description: 'Recarga con tarjeta Visa ****4242', date: new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000).toISOString(), balance: 15000 },
+    { id: 'wm-002', type: 'ride', amount: -1850, description: 'Viaje UniraAuto - Obelisco → Puerto Madero', date: new Date(now.getTime() - 2 * 60 * 60 * 1000).toISOString(), balance: 10000 },
+    { id: 'wm-003', type: 'food', amount: -6800, description: 'Parrilla La Porteña - Delivery', date: new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString(), balance: 11850 },
+    { id: 'wm-005', type: 'cashback', amount: 350, description: 'Cashback Green Life Bowls', date: new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000).toISOString(), balance: 18850 },
+  ];
+}
 
-  // Food
-  cart: [],
-  addToCart: (item) =>
-    set((s) => {
-      const existing = s.cart.find((c) => c.menuItem.id === item.menuItem.id);
-      if (existing) {
-        return {
-          cart: s.cart.map((c) =>
-            c.menuItem.id === item.menuItem.id
-              ? { ...c, quantity: c.quantity + item.quantity }
-              : c
+// ─── Persisted Store ────────────────────────────────────────────────────────
+
+export const useAppStore = create<AppStore>()(
+  persist(
+    (set, get) => ({
+      // Auth
+      user: null,
+      setUser: (user) => set({ user }),
+      isFirebaseReady: false,
+      setIsFirebaseReady: (v) => set({ isFirebaseReady: v }),
+      isHydrated: false,
+
+      // Navigation (not persisted - always starts at home)
+      currentScreen: 'home',
+      setCurrentScreen: (screen) => set({ currentScreen: screen }),
+      previousScreen: '',
+      navigateTo: (screen) => set((s) => ({ previousScreen: s.currentScreen, currentScreen: screen })),
+      goBack: () =>
+        set((s) => {
+          const prev = s.previousScreen || 'home';
+          return { currentScreen: prev, previousScreen: '' };
+        }),
+
+      // Ride (origin/destination not persisted, history IS persisted)
+      origin: null,
+      setOrigin: (p) => set({ origin: p }),
+      destination: null,
+      setDestination: (p) => set({ destination: p }),
+      selectedVehicle: 'auto',
+      setSelectedVehicle: (v) => set({ selectedVehicle: v }),
+      currentTrip: null,
+      setCurrentTrip: (t) => set({ currentTrip: t }),
+      tripHistory: [],
+      addToHistory: (t) =>
+        set((s) => ({ tripHistory: [t, ...s.tripHistory].slice(0, 50) })), // Keep max 50 trips
+      tripVerificationCode: null,
+      setTripVerificationCode: (code) => set({ tripVerificationCode: code }),
+
+      // Wallet (persisted)
+      walletBalance: 15000,
+      setWalletBalance: (b) => set({ walletBalance: b }),
+      walletMovements: [],
+      addMovement: (m) =>
+        set((s) => ({
+          walletMovements: [m, ...s.walletMovements].slice(0, 100), // Keep max 100 movements
+          walletBalance: s.walletBalance + m.amount,
+        })),
+
+      // Food (cart persisted)
+      cart: [],
+      addToCart: (item) =>
+        set((s) => {
+          const existing = s.cart.find((c) => c.menuItem.id === item.menuItem.id);
+          if (existing) {
+            return {
+              cart: s.cart.map((c) =>
+                c.menuItem.id === item.menuItem.id
+                  ? { ...c, quantity: c.quantity + item.quantity }
+                  : c
+              ),
+            };
+          }
+          return { cart: [...s.cart, item] };
+        }),
+      removeFromCart: (menuItemId) =>
+        set((s) => ({
+          cart: s.cart.filter((c) => c.menuItem.id !== menuItemId),
+        })),
+      updateCartQuantity: (menuItemId, qty) =>
+        set((s) => {
+          if (qty <= 0) {
+            return { cart: s.cart.filter((c) => c.menuItem.id !== menuItemId) };
+          }
+          return {
+            cart: s.cart.map((c) =>
+              c.menuItem.id === menuItemId ? { ...c, quantity: qty } : c
+            ),
+          };
+        }),
+      clearCart: () => set({ cart: [] }),
+      getCartTotal: () => {
+        const { cart } = get();
+        return cart.reduce((sum, item) => sum + item.menuItem.price * item.quantity, 0);
+      },
+
+      // Notifications (persisted)
+      notifications: [],
+      addNotification: (n) =>
+        set((s) => ({ notifications: [n, ...s.notifications].slice(0, 50) })),
+      markAsRead: (id) =>
+        set((s) => ({
+          notifications: s.notifications.map((n) =>
+            n.id === id ? { ...n, read: true } : n
           ),
-        };
-      }
-      return { cart: [...s.cart, item] };
+        })),
+
+      // Chat (not persisted - ephemeral)
+      chatMessages: [],
+      addChatMessage: (m) =>
+        set((s) => ({ chatMessages: [...s.chatMessages, m] })),
+      clearChat: () => set({ chatMessages: [] }),
+
+      // Driver mode (persisted)
+      isOnline: false,
+      setIsOnline: (v) => set({ isOnline: v }),
+
+      // UI (not persisted)
+      isLoading: false,
+      setLoading: (v) => set({ isLoading: v }),
+      toastMessage: '',
+      toastType: 'info',
+      showToast: (msg, type) => set({ toastMessage: msg, toastType: type }),
+
+      // Communities (persisted)
+      joinedCommunities: ['deportes', 'empleos'],
+      communityPosts: samplePosts,
+      comments: sampleComments,
+      joinCommunity: (id) => set((s) => ({ joinedCommunities: [...s.joinedCommunities, id] })),
+      leaveCommunity: (id) => set((s) => ({ joinedCommunities: s.joinedCommunities.filter(x => x !== id) })),
+      addPost: (cid, content, author, init) => set((s) => ({
+        communityPosts: [{ id: Date.now().toString(), communityId: cid, authorName: author, authorInitial: init, content, likes: 0, comments: 0, isLiked: false, createdAt: new Date().toISOString() }, ...s.communityPosts]
+      })),
+      likePost: (id) => set((s) => ({
+        communityPosts: s.communityPosts.map(p => p.id === id ? { ...p, isLiked: !p.isLiked, likes: p.isLiked ? p.likes - 1 : p.likes + 1 } : p)
+      })),
+      addComment: (pid, content, author, init) => set((s) => ({
+        comments: [{ id: Date.now().toString(), postId: pid, authorName: author, authorInitial: init, content, likes: 0, isLiked: false, createdAt: new Date().toISOString() }, ...s.comments],
+        communityPosts: s.communityPosts.map(p => p.id === pid ? { ...p, comments: p.comments + 1 } : p)
+      })),
+      likeComment: (id) => set((s) => ({
+        comments: s.comments.map(c => c.id === id ? { ...c, isLiked: !c.isLiked, likes: c.isLiked ? c.likes - 1 : c.likes + 1 } : c)
+      })),
+
+      // Logout
+      logout: () => {
+        set({
+          user: null,
+          currentScreen: 'auth',
+          previousScreen: '',
+          origin: null,
+          destination: null,
+          currentTrip: null,
+          tripVerificationCode: null,
+          isOnline: false,
+          chatMessages: [],
+          isLoading: false,
+          toastMessage: '',
+          toastType: 'info',
+        });
+      },
     }),
-  removeFromCart: (menuItemId) =>
-    set((s) => ({
-      cart: s.cart.filter((c) => c.menuItem.id !== menuItemId),
-    })),
-  updateCartQuantity: (menuItemId, qty) =>
-    set((s) => {
-      if (qty <= 0) {
-        return { cart: s.cart.filter((c) => c.menuItem.id !== menuItemId) };
-      }
-      return {
-        cart: s.cart.map((c) =>
-          c.menuItem.id === menuItemId ? { ...c, quantity: qty } : c
-        ),
-      };
-    }),
-  clearCart: () => set({ cart: [] }),
-  getCartTotal: () => {
-    const { cart } = get();
-    return cart.reduce((sum, item) => sum + item.menuItem.price * item.quantity, 0);
-  },
-
-  // Notifications
-  notifications: sampleNotifications,
-  addNotification: (n) =>
-    set((s) => ({ notifications: [n, ...s.notifications] })),
-  markAsRead: (id) =>
-    set((s) => ({
-      notifications: s.notifications.map((n) =>
-        n.id === id ? { ...n, read: true } : n
-      ),
-    })),
-
-  // Chat
-  chatMessages: [],
-  addChatMessage: (m) =>
-    set((s) => ({ chatMessages: [...s.chatMessages, m] })),
-  clearChat: () => set({ chatMessages: [] }),
-
-  // Driver mode
-  isOnline: false,
-  setIsOnline: (v) => set({ isOnline: v }),
-
-  // UI
-  isLoading: false,
-  setLoading: (v) => set({ isLoading: v }),
-  toastMessage: '',
-  toastType: 'info',
-  
-  showToast: (msg, type) => set({ toastMessage: msg, toastType: type }),
-  // Communities
-  joinedCommunities: ['deportes','empleos'],
-  communityPosts: samplePosts,
-  comments: sampleComments,
-  joinCommunity: (id) => set((s) => ({ joinedCommunities: [...s.joinedCommunities, id] })),
-  leaveCommunity: (id) => set((s) => ({ joinedCommunities: s.joinedCommunities.filter(x=>x!==id) })),
-  addPost: (cid, content, author, init) => set((s) => ({ communityPosts: [{ id:Date.now().toString(), communityId:cid, authorName:author, authorInitial:init, content, likes:0, comments:0, isLiked:false, createdAt:'2025-04-21' }, ...s.communityPosts] })),
-  likePost: (id) => set((s) => ({ communityPosts: s.communityPosts.map(p => p.id===id ? {...p, isLiked:!p.isLiked, likes:p.isLiked?p.likes-1:p.likes+1} : p) })),
-  addComment: (pid, content, author, init) => set((s) => ({ comments: [{ id:Date.now().toString(), postId:pid, authorName:author, authorInitial:init, content, likes:0, isLiked:false, createdAt:'2025-04-21' }, ...s.comments], communityPosts: s.communityPosts.map(p => p.id===pid ? {...p, comments:p.comments+1} : p) })),
-  likeComment: (id) => set((s) => ({ comments: s.comments.map(c => c.id===id ? {...c, isLiked:!c.isLiked, likes:c.isLiked?c.likes-1:c.likes+1} : c) })),
-}));
-
-
-
+    {
+      name: 'unira-app-storage',
+      // Only persist these keys (transient UI state is NOT persisted)
+      partialize: (state) => ({
+        user: state.user,
+        tripHistory: state.tripHistory,
+        walletBalance: state.walletBalance,
+        walletMovements: state.walletMovements,
+        cart: state.cart,
+        notifications: state.notifications,
+        isOnline: state.isOnline,
+        joinedCommunities: state.joinedCommunities,
+        communityPosts: state.communityPosts,
+        comments: state.comments,
+      }),
+      // Custom storage with Date-aware JSON parsing (SSR safe)
+      storage: typeof window !== 'undefined' ? {
+        getItem: (name) => {
+          const str = localStorage.getItem(name);
+          if (!str) return null;
+          try {
+            return JSON.parse(str, (key, value) => {
+              if (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/.test(value)) {
+                return new Date(value);
+              }
+              return value;
+            });
+          } catch {
+            return null;
+          }
+        },
+        setItem: (name, value) => {
+          localStorage.setItem(name, JSON.stringify(value));
+        },
+        removeItem: (name) => {
+          localStorage.removeItem(name);
+        },
+      } : {
+        getItem: () => null,
+        setItem: () => {},
+        removeItem: () => {},
+      },
+      // Initialize with sample data for new users, mark as hydrated
+      onRehydrateStorage: () => (state) => {
+        if (state) {
+          // If no trip history, this is a new user - add sample data
+          if (state.tripHistory.length === 0) {
+            state.tripHistory = generateSampleTrips();
+          }
+          if (state.notifications.length === 0) {
+            state.notifications = generateSampleNotifications();
+          }
+          if (state.walletMovements.length === 0) {
+            state.walletMovements = generateSampleWalletMovements();
+          }
+        }
+        // Mark as hydrated after rehydration completes
+        setTimeout(() => {
+          useAppStore.setState({ isHydrated: true });
+        }, 0);
+      },
+    }
+  )
+);

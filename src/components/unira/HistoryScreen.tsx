@@ -48,7 +48,7 @@ const TYPE_CONFIG: Record<
 
 // ─── Date Grouping Helper ────────────────────────────────────────────────────
 
-function getDateGroup(date: Date): string {
+function getDateGroup(date: Date | string): string {
   const now = new Date();
   const d = new Date(date);
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());

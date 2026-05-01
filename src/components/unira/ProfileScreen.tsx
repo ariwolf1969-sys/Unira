@@ -119,8 +119,8 @@ export function ProfileScreen() {
 
   // Handle logout
   const handleLogout = useCallback(() => {
-    store.setUser(null);
-    store.setCurrentScreen('splash');
+    store.logout();
+    store.showToast('Sesión cerrada', 'info');
   }, [store]);
 
   // Handle change role
