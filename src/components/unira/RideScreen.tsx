@@ -86,6 +86,50 @@ const VEHICLE_ICONS: Record<string, React.ElementType> = {
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
+// Parse Nominatim display_name into a proper Place
+// Nominatim format: "2535, Avenida 23, Miramar, Partido de General Alvarado, Buenos Aires, Argentina"
+// We want: name = "Avenida 23 2535", address = "Miramar, Buenos Aires"
+function parseNominatimToPlace(displayName: string, lat: string, lon: string): Place {
+  const parts = displayName.split(' - ');
+  let rawName: string;
+  let rawAddress: string;
+
+  if (parts.length > 1) {
+    // Already formatted by our fallback parser
+    rawName = parts[0].trim();
+    rawAddress = parts.slice(1).join(' - ').trim();
+  } else {
+    // Nominatim format: comma-separated
+    const commaParts = displayName.split(',').map(s => s.trim());
+    // First part is usually house number or POI name
+    // Second part is usually the street name
+    if (commaParts.length >= 2) {
+      // If first part is just a number, combine with street name
+      const firstPart = commaParts[0];
+      const secondPart = commaParts[1];
+      if (/^\d+$/.test(firstPart)) {
+        // "2535" + "Avenida 23" → "Avenida 23 2535"
+        rawName = `${secondPart} ${firstPart}`;
+      } else {
+        // First part is a street or place name, keep it
+        rawName = firstPart;
+      }
+      // Address: skip the first two parts (used in name), take next 2-3 meaningful parts
+      rawAddress = commaParts.slice(2, 5).join(', ');
+    } else {
+      rawName = commaParts[0];
+      rawAddress = '';
+    }
+  }
+
+  return {
+    name: rawName,
+    address: rawAddress || displayName.split(',').slice(1, 4).join(', ').trim(),
+    lat: parseFloat(lat),
+    lng: parseFloat(lon),
+  };
+}
+
 function getRandomDriver(): DriverData {
   return SAMPLE_DRIVERS[Math.floor(Math.random() * SAMPLE_DRIVERS.length)];
 }
@@ -282,13 +326,7 @@ export function RideScreen() {
   }, [searchNominatim]);
 
   const selectOrigin = useCallback((result: NominatimResult) => {
-    const parts = result.display_name.split(' - ');
-    const place: Place = {
-      name: parts[0].split(',')[0].trim(),
-      address: parts[1]?.trim() || result.display_name.split(',').slice(1, 3).join(',').trim(),
-      lat: parseFloat(result.lat),
-      lng: parseFloat(result.lon),
-    };
+    const place = parseNominatimToPlace(result.display_name, result.lat, result.lon);
     setLocalOrigin(place);
     setOriginText(place.name);
     setShowOriginSuggestions(false);
@@ -297,13 +335,7 @@ export function RideScreen() {
   }, [store]);
 
   const selectDest = useCallback((result: NominatimResult) => {
-    const parts = result.display_name.split(' - ');
-    const place: Place = {
-      name: parts[0].split(',')[0].trim(),
-      address: parts[1]?.trim() || result.display_name.split(',').slice(1, 3).join(',').trim(),
-      lat: parseFloat(result.lat),
-      lng: parseFloat(result.lon),
-    };
+    const place = parseNominatimToPlace(result.display_name, result.lat, result.lon);
     setLocalDest(place);
     setDestText(place.name);
     setShowDestSuggestions(false);
@@ -399,13 +431,7 @@ export function RideScreen() {
   }, [searchNominatim]);
 
   const selectNewWaypoint = useCallback((result: NominatimResult) => {
-    const parts = result.display_name.split(' - ');
-    const place: Place = {
-      name: parts[0].split(',')[0].trim(),
-      address: parts[1]?.trim() || result.display_name.split(',').slice(1, 3).join(',').trim(),
-      lat: parseFloat(result.lat),
-      lng: parseFloat(result.lon),
-    };
+    const place = parseNominatimToPlace(result.display_name, result.lat, result.lon);
     setWaypoints(prev => [...prev, place]);
     setIsAddingWaypoint(false);
     setNewWaypointText('');
