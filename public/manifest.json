@@ -1,0 +1,74 @@
+{
+  "name": "TEYEVO — Te llevamos lo que desees... donde lo desees",
+  "short_name": "TEYEVO",
+  "description": "TEYEVO — Te llevamos lo que desees... donde lo desees. Super-app de transporte, delivery, envíos y pagos. Cooperativa Unira de servicios urbanos.",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0A0F14",
+  "theme_color": "#0EA5A0",
+  "categories": ["travel", "transportation", "food", "shopping", "finance"],
+  "lang": "es-AR",
+  "dir": "ltr",
+  "scope": "/",
+  "id": "/",
+  "icons": [
+    {
+      "src": "/favicon-32.png",
+      "sizes": "32x32",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Pedir viaje",
+      "short_name": "Viaje",
+      "description": "Solicitar un TEYEVOAuto o Moto",
+      "url": "/?screen=ride",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Pedir comida",
+      "short_name": "Food",
+      "description": "Restaurantes cerca tuyo",
+      "url": "/?screen=food",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Mi billetera",
+      "short_name": "Pay",
+      "description": "Saldo y movimientos TEYEVOPay",
+      "url": "/?screen=wallet",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    }
+  ],
+  "display_override": ["standalone", "minimal-ui"],
+  "edge_side_panel": {
+    "preferred_width": 400
+  }
+}

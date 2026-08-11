@@ -1,0 +1,472 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  // DATABASE_URL must be set explicitly. No silent fallback to a local dev.db
+  // during build / runtime — if it's missing, Prisma will error loudly.
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                   String           @id @default(cuid())
+  name                 String
+  phone                String           @unique
+  email                String?          @default("")
+  dni                  String?          @default("")
+  // ── Verification documents (base64 data URLs) ──
+  dniFront             String?          @default("")
+  dniBack              String?          @default("")
+  facePhoto            String?          @default("")
+  selfieWithDni         String?          @default("")
+  licenseFront         String?          @default("")
+  licenseBack          String?          @default("")
+  // ── Driver vehicle info (Session 17) ──
+  // vehicleType matchea el `id` de VehicleType en src/lib/places.ts
+  // (moto, auto_2_puertas, auto_4_puertas, auto_alta_gama, trafic_8, van_7,
+  //  camioneta_carga, mudanza, traslado_animales, discapacitados, lancha)
+  vehicleType          String?          @default("")
+  vehiclePlate         String?          @default("")   // patente (formato AR)
+  vehicleBrand         String?          @default("")   // marca (ej: Toyota)
+  vehicleModel         String?          @default("")   // modelo (ej: Corolla)
+  vehicleYear          Int?                            // año del vehículo
+  vehicleColor         String?          @default("")   // color
+  cedulaVerdeAzul      String?          @default("")   // foto FRENTE de la cédula verde/azul
+  cedulaVerdeAzulBack  String?          @default("")   // foto DORSO de la cédula verde/azul
+  seguroVehiculo       String?          @default("")   // foto del seguro del vehículo
+  // ── Expiration dates (for admin tracking) ──
+  licenseExpiryDate    String?          @default("")   // vencimiento del registro de conducir (YYYY-MM-DD)
+  seguroExpiryDate     String?          @default("")   // vencimiento del seguro del vehículo (YYYY-MM-DD)
+  cedulaExpiryDate     String?          @default("")   // vencimiento de la cédula verde/azul (YYYY-MM-DD)
+  // ── Home address ──
+  address              String?          @default("")
+  addressLat           Float?
+  addressLng           Float?
+  // ── Profile ──
+  avatar               String?          @default("")
+  birthday             String?          @default("")   // ISO date YYYY-MM-DD
+  // ── Roles & status ──
+  role                 String           @default("passenger")
+  isDriver             Boolean          @default(false)
+  isDriverApproved     Boolean          @default(false)
+  isAdmin              Boolean          @default(false)
+  isSocio              Boolean          @default(true)   // socio cooperativa = 5% comisión; no socio = 8%
+  verificationStatus   String           @default("pending")  // pending | verified | rejected
+  // ── Phone verification (OTP) ──
+  phoneOtp             String?          @default("")
+  phoneOtpExpiresAt    DateTime?
+  phoneVerifiedAt      DateTime?
+  // ── Telegram OTP (preferred over SMS when available) ──
+  // chat_id del usuario con el bot de TEYEVO. Se setea cuando el usuario
+  // abre el bot por primera vez con /start <phone>. Si está presente, los
+  // OTP se envían por Telegram (gratis) en vez de por SMS (Twilio pago).
+  telegramChatId       String?          @default("")
+  // Canal preferido por el usuario: "telegram" | "sms" | "whatsapp"
+  otpChannel           String?          @default("telegram")
+  // ── Email verification (token link) ──
+  emailVerifyToken     String?          @default("")
+  emailVerifyExpiresAt DateTime?
+  emailVerifiedAt      DateTime?
+  // ── Wallet ──
+  walletBalance        Int              @default(15000)
+  // ── Stats (denormalized for fast profile reads; recomputed by /api/users/me) ──
+  tripCountAsPassenger Int              @default(0)
+  tripCountAsDriver    Int              @default(0)
+  totalSpent           Int              @default(0)   // sum of fares paid as passenger
+  totalEarned          Int              @default(0)   // sum of fares earned as driver
+  averageRating        Float            @default(0)   // 0-5, computed from ratings received
+  ratingCount          Int              @default(0)
+  // ── Birthday bonus ──
+  birthdayBonusGrantedYear Int          @default(0)   // last year a birthday bonus was credited
+  // ── Rewards / points system ──
+  rewardPoints            Int          @default(0)   // accumulated points (1 point per trip as passenger)
+  rewardLevel             String       @default("bronze")  // bronze | silver | gold | platinum
+  rewardLevelUpdatedAt     DateTime?
+  // ── Driver online status (matching) ──
+  isOnline                Boolean  @default(false)
+  lastLat                 Float?
+  lastLng                 Float?
+  lastLocationUpdatedAt   DateTime?
+  heading                 Float    @default(0)    // 0-359 degrees, 0 = north
+  currentTripId           String   @default("")   // active trip when driver is in_progress
+  pushToken               String?                  // FCM device token for push notifications
+  // ── Permissions onboarding (Grupo F) ──
+  permissionsOnboardedAt DateTime?
+  cameraConsent        Boolean  @default(false)
+  microphoneConsent    Boolean  @default(false)
+  notificationsConsent Boolean  @default(false)
+  locationConsent      Boolean  @default(true)   // already required for ride hailing
+  // ── Terms & Conditions acceptance ──
+  // ISO timestamp of the most recent acceptance. Null = pendiente de aceptación.
+  // El usuario debe aceptar TyC antes de usar la app. Cada vez que cambien los TyC,
+  // se debe resetear este campo en la BD para forzar la reaparición del banner.
+  termsAcceptedAt     DateTime?
+  termsVersion        String?  @default("1.0")
+  recordingConsentGlobal Boolean @default(false)  // consent global para grabaciones de viajes
+  createdAt            DateTime         @default(now())
+  updatedAt            DateTime         @updatedAt
+  trips                Trip[]
+  walletMovements      WalletMovement[]
+}
+
+// ── Reward point movements (audit log) ──
+model RewardLog {
+  id          String   @id @default(cuid())
+  userId      String
+  points      Int      // positive = earned, negative = redeemed
+  reason      String   // e.g. "viaje completado", "canje: descuento 10%"
+  referenceId String?  @default("")  // optional link to trip/discount
+  createdAt   DateTime @default(now())
+}
+
+// ── Reward tiers configuration (admin-managed) ──
+model RewardTier {
+  id           String   @id @default(cuid())
+  level        String   @unique  // bronze | silver | gold | platinum
+  minPoints    Int               // minimum points to reach this tier
+  benefits     String   @default("[]")  // JSON array of benefit descriptions
+  discountPercent Int @default(0)       // % discount on community purchases
+  freeTripsPerMonth Int @default(0)    // free trips earned per month at this tier
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Discount{
+  id          String   @id @default(cuid())
+  code        String   @unique
+  title       String
+  description String
+  amount      Int      // amount in ARS to discount, or percent if type=percent
+  type        String   @default("fixed")  // "fixed" | "percent"
+  channel     String   @default("both")    // "phone" | "email" | "both"
+  validFrom   DateTime
+  validUntil  DateTime
+  maxUses     Int      @default(1)
+  usesCount   Int      @default(0)
+  createdAt   DateTime @default(now())
+  // Optional: assign to specific user (null = available to all)
+  userId      String?
+}
+
+model Trip {
+  id            String   @id @default(cuid())
+  userId        String
+  type          String   @default("ride")
+  status        String   @default("completed")
+  originName    String
+  originAddress String
+  originLat     Float
+  originLng     Float
+  destName      String
+  destAddress   String
+  destLat       Float
+  destLng       Float
+  fare          Int
+  vehicleType   String?  @default("auto")
+  driverId      String?
+  driverName    String?
+  driverPhoto   String?
+  driverVehicle String?
+  rating        Int?
+  thirdParty    String?
+  thirdPhone    String?
+  thirdPartyPhoto String?
+  distance      Float?
+  duration      Int?
+  waypoints     String?
+  route         String?  // JSON array of [lat,lng] polyline for trip history (Grupo C)
+  // ── Matching system fields ──
+  passengerId            String   @default("")   // redundant with userId but clearer
+  requestedVehicleType   String   @default("")   // vehicle type requested by passenger
+  verificationCode       String   @default("")   // 4-digit code for driver to verify passenger
+  routePolyline          String   @default("")   // encoded route for server-side
+  expiresAt              DateTime?               // when trip request expires (45s)
+  driverNotifiedIds      String   @default("[]")  // JSON array of driver IDs already notified
+  rejectedByDriverIds    String   @default("[]")  // JSON array of driver IDs who declined
+  acceptedAt             DateTime?               // when driver accepted the trip
+  paymentMethod          String   @default("")   // cash | wallet | card
+  // ── Grupo J: live driver tracking ──
+  // Updated by POST /api/trips/[id]/location while the trip is in_progress.
+  // Used by /api/share/[token] and GET /api/trips/[id]/location to render
+  // the driver's real position on the map (passenger + shared link viewers).
+  // When null, consumers fall back to the time-based interpolated simulation.
+  currentLat         Float?
+  currentLng         Float?
+  currentHeading     Float?   // 0-359 degrees, 0 = north
+  currentSpeed       Float?   // km/h
+  locationUpdatedAt  DateTime?
+  createdAt     DateTime @default(now())
+  user          User     @relation(fields: [userId], references: [id])
+  ratings       Rating[]
+  shares        SharedTrip[]
+  messages      TripMessage[]
+}
+
+model WalletMovement {
+  id          String   @id @default(cuid())
+  userId      String
+  type        String
+  amount      Int
+  description String
+  balance     Int
+  createdAt   DateTime @default(now())
+  user        User     @relation(fields: [userId], references: [id])
+}
+
+model Rating {
+  id            String   @id @default(cuid())
+  tripId        String
+  fromUserId    String
+  toUserId      String
+  // Who is rating whom: passenger → driver, or driver → passenger
+  fromRole      String   // "passenger" | "driver"
+  toRole        String   // "passenger" | "driver"
+  stars         Int      // 1-5
+  reason        String   @default("")  // required when stars is 1 or 5
+  comment       String   @default("")
+  // Privacy: rating is hidden from recipient until this date (7-day delay)
+  visibleToRecipientAt DateTime
+  // When the cron job releases this rating (set when now > visibleToRecipientAt)
+  releasedAt    DateTime?
+  // Whether the recipient has seen it
+  seenAt        DateTime?
+  createdAt     DateTime @default(now())
+  trip          Trip     @relation(fields: [tripId], references: [id])
+}
+
+model LostItem {
+  id            String   @id @default(cuid())
+  reporterType  String   // "passenger" | "driver"
+  reporterId    String   // user id of reporter
+  reporterName  String
+  reporterPhone String
+  tripId        String?  // optional link to a specific trip
+  itemType      String   // brief description: "Mochila negra", "Celular", etc.
+  description   String
+  photo         String?  @default("")  // base64 optional
+  status        String   @default("open")  // "open" | "matched" | "closed"
+  // Driver-specific: where they found it (vehicle id, route)
+  foundLocation String?  @default("")
+  createdAt     DateTime @default(now())
+  resolvedAt    DateTime?
+}
+
+// ── Trip chat messages (real-time between driver and passenger) ──
+model TripMessage {
+  id        String   @id @default(cuid())
+  tripId    String
+  fromUserId String
+  toUserId   String
+  text      String
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+  trip      Trip     @relation(fields: [tripId], references: [id])
+}
+
+model HelpTicket {
+  id            String   @id @default(cuid())
+  userId        String
+  channel       String   @default("app")  // "app" | "telegram"
+  subject       String
+  question      String
+  aiAnswer      String?  @default("")
+  escalatedToHuman Boolean @default(false)
+  resolvedAt    DateTime?
+  createdAt     DateTime @default(now())
+}
+
+// ── Shared trip tracking (Grupo G) ──
+// A short-lived token that lets anyone with the link see a trip's progress
+// on a public map page (/viaje/[token]) without logging in.
+model SharedTrip {
+  id        String   @id @default(cuid())
+  tripId    String
+  token     String   @unique
+  // The user who created the share link (passenger or driver)
+  userId    String
+  // Soft expiration — share auto-expires 24h after trip completion
+  expiresAt DateTime
+  // Number of times the link has been viewed (for privacy awareness)
+  viewCount Int      @default(0)
+  createdAt DateTime @default(now())
+  trip      Trip     @relation(fields: [tripId], references: [id])
+}
+
+// ── Driver configuration (Grupo H) ──
+// One row per driver. Stores their matching preferences that the backend
+// uses to filter trip offers.
+model DriverConfig {
+  id                  String   @id @default(cuid())
+  userId              String   @unique
+  // H2: max distance (km) the driver will travel to pick up a passenger
+  maxPickupKm         Float    @default(10)
+  // H3: minimum fare (ARS) the driver will accept
+  minFare             Int      @default(0)
+  // H4: minimum ARS per km the driver will accept
+  minPerKm            Int      @default(0)
+  // Minimum passenger rating the driver will accept (0 = no filter)
+  minPassengerRating  Float    @default(0)
+  // H6: accept trips automatically (auto-accept mode vs manual)
+  autoAccept          Boolean  @default(false)
+  // H7: availability schedule as JSON — array of {day: 0-6, from: "HH:mm", to: "HH:mm"}
+  schedule            String   @default("[]")
+  // H8: preferred zones as JSON — array of {name, lat, lng, radiusKm}
+  preferredZones      String   @default("[]")
+  // Toggle radars/speed alerts (Grupo M preview — used by client only)
+  radarAlertsEnabled  Boolean  @default(true)
+  radarAlertRadius    Int      @default(300)
+  // ── Modo Destino (sin límites de uso) ──
+  // Driver picks a destination they're heading to; only trips whose destination
+  // is within destinationRadiusKm of that point get offered. No daily limit.
+  destinationModeEnabled  Boolean  @default(false)
+  destinationAddress      String   @default("")
+  destinationLat          Float    @default(0)
+  destinationLng          Float    @default(0)
+  destinationRadiusKm     Float    @default(4)
+  // ── Accepted payment methods ──
+  // JSON array of strings: "cash" | "credit_card" | "debit_card"
+  // Empty array means "all methods accepted".
+  acceptedPaymentMethods  String   @default("[]")
+  // ── Preferences (passenger-facing) ──
+  // Gender preference for driver: "any" | "male" | "female"
+  genderPreference      String   @default("any")
+  // Trip preferences (JSON array of strings)
+  // Possible values: "ac" | "radio" | "silence" | "smoking" | "pets" | "front_seat" | "luggage" | "children"
+  tripPreferences        String   @default("[]")
+  // Whether the driver allows smoking in their vehicle
+  smokingAllowed         Boolean  @default(false)
+  // Whether the driver allows pets in their vehicle
+  petsAllowed            Boolean  @default(true)
+  // Whether the driver plays music/radio during trips
+  musicAllowed           Boolean  @default(true)
+  // Whether the driver prefers silence during trips
+  prefersSilence         Boolean  @default(false)
+  // Whether the driver has AC in their vehicle
+  hasAC                  Boolean  @default(true)
+  // Gender of the driver (for passenger gender preference matching)
+  driverGender           String   @default("")
+  // Min driver rating filter (for when user is passenger)
+  minDriverRating        Float    @default(0)
+  // ── Communication preference ──
+  // "both" | "calls" | "messages" — how the driver prefers passengers contact them
+  // during a trip. Displayed to passengers so they know the best way to reach the driver.
+  communicationPreference String @default("both")
+  // ── Datos para depósitos (CBU/CVU) ──
+  // El conductor los carga una vez y se usan para los depósitos semanales
+  // de ganancias. cbuAlias es opcional. cbuNumber se guarda sin espacios ni
+  // guiones; los últimos 4 dígitos se muestran enmascarados en el dashboard.
+  cbuAlias               String   @default("")
+  cbuNumber              String   @default("")
+  cbuHolderName          String   @default("")  // titular de la cuenta (puede diferir del conductor)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+}
+
+// ── Trip recording (Grupo F) ──
+// Stores metadata about audio/video recordings made during a trip.
+// The actual binary is stored in object storage (S3/Cloudinary) in production;
+// for MVP/dev we keep a data URL or external URL reference.
+model TripRecording {
+  id            String   @id @default(cuid())
+  tripId        String?
+  userId        String   // the user who initiated the recording (passenger or driver)
+  type          String   // "audio" | "video"
+  // For MVP: blob URL only valid during session, or base64 if uploaded.
+  // In production, this would be an S3 key/URL.
+  storageUrl    String   @default("")
+  durationSec   Int      @default(0)
+  fileSizeKb    Int      @default(0)
+  // Consent captured at start
+  consentText   String   @default("")
+  // Retention: auto-delete after this date
+  expiresAt     DateTime
+  // Access control: only admin can access, and only with a formal claim
+  claimId       String?  @default("")  // linked claim ID if accessed for a claim
+  createdAt     DateTime @default(now())
+}
+
+// ── SOS alerts (panic button) ──
+// When a passenger taps the SOS button, we fire tel:911 AND create one of these
+// rows so the cooperativa admin panel sees the alert in real time.
+// Admin can click through to the live trip tracking page (/viaje/[token]) to
+// see where the vehicle is right now and relay that to the police.
+model SosAlert {
+  id          String   @id @default(cuid())
+  userId      String   // passenger who triggered the alert
+  tripId      String?  // optional — set if there was an active trip
+  shareToken  String?  // optional — token for /viaje/[token] live tracking
+  lat         Float?   // passenger device location at trigger time
+  lng         Float?
+  // Status flow: active → resolved | false_alarm
+  status      String   @default("active")  // "active" | "resolved" | "false_alarm"
+  // Admin notes when resolving (e.g. "Falsa alarma — pasajero se equivocó de botón")
+  resolutionNote String @default("")
+  resolvedAt  DateTime?
+  resolvedBy  String?  // admin user id who resolved it
+  createdAt   DateTime @default(now())
+
+  // Index for fast "active alerts" queries
+  @@index([status, createdAt])
+}
+
+// ── Queue locations (e.g., Aeroparque, Ezeiza) ──
+// Admin-defined locations where drivers can join a virtual queue
+// to be assigned trips in FIFO order.
+model QueueLocation {
+  id           String   @id @default(cuid())
+  name         String   // e.g. "Aeroparque Jorge Newbery"
+  address      String   @default("")
+  lat          Float
+  lng          Float
+  radiusMeters Int      @default(500)
+  isActive     Boolean  @default(true)
+  maxQueueSize Int      @default(50)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  entries       QueueEntry[]
+}
+
+// ── Queue entries ──
+// Each driver in a queue at a specific location.
+// Position is auto-assigned (FIFO based on joinedAt).
+model QueueEntry {
+  id                  String    @id @default(cuid())
+  driverId            String
+  driverName          String    @default("")
+  locationId          String
+  locationName        String    @default("")
+  position            Int       @default(1)
+  joinedAt            DateTime  @default(now())
+  estimatedWaitMinutes Int      @default(0)
+  assignedAt          DateTime?
+  status              String    @default("waiting") // "waiting" | "assigned" | "left" | "expired"
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+  location            QueueLocation @relation(fields: [locationId], references: [id])
+
+  @@index([locationId, status])
+  @@index([driverId, status])
+}
+
+// ── Pending Data Changes (approval workflow) ──
+// When a user requests to modify sensitive data (phone, email, vehicle,
+// bank account), the change is stored here and must be approved by an admin
+// before being applied to the User or DriverConfig table.
+model PendingChange {
+  id          String   @id @default(cuid())
+  userId      String   // the user requesting the change
+  field       String   // which field: "phone" | "email" | "vehicleType" | "vehiclePlate" | "vehicleBrand" | "vehicleModel" | "vehicleYear" | "vehicleColor" | "cbuNumber" | "cbuAlias" | "cbuHolderName"
+  oldValue    String   @default("") // previous value (for audit)
+  newValue    String   // requested new value
+  reason      String   @default("") // optional reason from user
+  status      String   @default("pending") // "pending" | "approved" | "rejected"
+  reviewedBy  String?  // admin userId who reviewed
+  reviewedAt  DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([userId, status])
+  @@index([status, createdAt])
+}
+

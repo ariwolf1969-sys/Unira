@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120">
+  <defs>
+    <!-- Background gradient: teal to blue (brand colors) -->
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0EA5A0"/>
+      <stop offset="100%" stop-color="#0B8CE9"/>
+    </linearGradient>
+
+    <!-- The "T" itself doubles as the flagpole. It is bold and wide so
+         the letter is unmistakable. -->
+    <linearGradient id="tFill" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#0A0F14"/>
+      <stop offset="100%" stop-color="#1E2A38"/>
+    </linearGradient>
+
+    <!-- Waving flag path: a rectangle whose right edge undulates
+         vertically to suggest a flag fluttering in the wind. -->
+    <path id="flagPath" d="
+      M 70 30
+      L 108 30
+      C 104 36 108 42 104 48
+      C 108 54 104 60 108 66
+      C 104 72 108 78 104 84
+      L 70 84
+      Z
+    "/>
+    <clipPath id="flagClip">
+      <use href="#flagPath"/>
+    </clipPath>
+
+    <!-- Subtle shadow for the T to give it depth -->
+    <filter id="tShadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="0.8"/>
+      <feOffset dx="0.6" dy="0.6" result="offsetblur"/>
+      <feComponentTransfer>
+        <feFuncA type="linear" slope="0.35"/>
+      </feComponentTransfer>
+      <feMerge>
+        <feMergeNode/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Background: rounded square with brand gradient -->
+  <rect x="0" y="0" width="120" height="120" rx="26" fill="url(#bg)"/>
+
+  <!-- ──────────────────────────────────────────────────────────────
+       The "T": bold, wide, clearly readable as the letter T.
+       The vertical bar of the T extends through the flag and acts
+       as the flagpole, so the T and the flag are visually unified.
+       ────────────────────────────────────────────────────────────── -->
+
+  <!-- T crossbar (horizontal top stroke): wide and chunky -->
+  <rect x="28" y="22" width="44" height="12" rx="2"
+        fill="url(#tFill)" filter="url(#tShadow)"/>
+
+  <!-- T stem (vertical stroke): goes from the crossbar down to the
+       bottom. This is also the flagpole. -->
+  <rect x="44" y="22" width="12" height="78" rx="2"
+        fill="url(#tFill)" filter="url(#tShadow)"/>
+
+  <!-- Knob on top of the T stem (flagpole finial) -->
+  <circle cx="50" cy="18" r="5" fill="#0A0F14"/>
+
+  <!-- ──────────────────────────────────────────────────────────────
+       The Argentine flag, waving to the right of the T.
+       Three horizontal bands: light blue / white / light blue.
+       Sun of May in the center white band.
+       The flag is clipped to the waving path so the right edge
+       undulates — it looks like it's fluttering.
+       ────────────────────────────────────────────────────────────── -->
+
+  <g clip-path="url(#flagClip)">
+    <!-- Top band: light blue -->
+    <rect x="56" y="30" width="56" height="18" fill="#74BDE8"/>
+    <!-- Middle band: white -->
+    <rect x="56" y="48" width="56" height="18" fill="#FFFFFF"/>
+    <!-- Bottom band: light blue -->
+    <rect x="56" y="66" width="56" height="18" fill="#74BDE8"/>
+
+    <!-- Sun of May (simplified): yellow circle + 12 rays -->
+    <g transform="translate(72, 57)">
+      <circle cx="0" cy="0" r="6" fill="#FCD232"/>
+      <!-- 12 triangular rays around the sun -->
+      <g fill="#FCD232">
+        <polygon points="0,-11 1.5,-7 -1.5,-7"/>
+        <polygon points="0,11 1.5,7 -1.5,7"/>
+        <polygon points="-11,0 -7,1.5 -7,-1.5"/>
+        <polygon points="11,0 7,1.5 7,-1.5"/>
+        <polygon points="-7.8,-7.8 -4.2,-4.2 -5.5,-2.9 -8.4,-6.4" transform="rotate(0)"/>
+        <polygon points="7.8,-7.8 4.2,-4.2 5.5,-2.9 8.4,-6.4"/>
+        <polygon points="-7.8,7.8 -4.2,4.2 -5.5,2.9 -8.4,6.4"/>
+        <polygon points="7.8,7.8 4.2,4.2 5.5,2.9 8.4,6.4"/>
+      </g>
+    </g>
+  </g>
+
+  <!-- Subtle outline on the flag's waving edge to make it pop -->
+  <use href="#flagPath" fill="none" stroke="rgba(10,15,20,0.18)" stroke-width="0.6"/>
+</svg>
